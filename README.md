@@ -263,6 +263,23 @@ cargo build --release
 cargo test
 ```
 
+### Set up pre-commit hooks
+
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit
+# or on macOS
+brew install pre-commit
+
+# Install hooks
+./scripts/pre-commit-install.sh
+```
+
+The pre-commit hooks include:
+- `cargo fmt` - Format code on commit
+- `cargo clippy` - Lint code on commit
+- `cargo test` - Run tests on push
+
 ### Project structure
 
 ```
