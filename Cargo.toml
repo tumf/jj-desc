@@ -6,6 +6,7 @@ rust-version = "1.85"
 description = "Generate jj commit descriptions using LLM"
 license = "MIT"
 repository = "https://github.com/tumf/jj-desc"
+homepage = "https://github.com/tumf/jj-desc"
 
 [dependencies]
 # CLI
@@ -40,3 +41,8 @@ rstest = "0.23"
 lto = true
 codegen-units = 1
 strip = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

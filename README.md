@@ -10,6 +10,7 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 - 🔌 Custom endpoint support (Azure OpenAI, Ollama, proxies, etc.)
 - 🔍 Preview mode with `--dry-run`
 - 📝 Follows git commit message best practices
+- 🔀 Handles merge commits automatically (no LLM call needed for empty merge commits)
 
 ## Installation
 
@@ -162,7 +163,7 @@ Override the default model:
 
 ```bash
 jj-desc --model gpt-4o
-# or
+# or    
 jj-desc --model anthropic/claude-3.5-sonnet
 ```
 
@@ -236,8 +237,16 @@ jj undo
 ## How it works
 
 1. Runs `jj diff` to get the current changes
-2. Sends the diff to your chosen LLM provider API with a specialized prompt
-3. Applies the generated description using `jj desc -m`
+2. If the diff is empty:
+   - Checks if it's a merge commit (using `jj log -T 'parents.len()'`)
+   - If yes, sets description to "Merge commit" without calling LLM
+   - If no, returns an error
+3. If the diff is not empty, sends it to your chosen LLM provider API with a specialized prompt
+4. Applies the generated description using `jj desc -m`
+
+### Merge Commit Handling
+
+jj often marks merge commits as "empty" because they don't introduce new changes themselves (see [jj FAQ](https://docs.jj-vcs.dev/latest/FAQ/#why-are-most-merge-commits-marked-as-empty)). `jj-desc` detects merge commits automatically and sets an appropriate description without requiring LLM API calls.
 
 ## Why no confirmation prompt?
 
