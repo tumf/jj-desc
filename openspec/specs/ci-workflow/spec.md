@@ -64,4 +64,3 @@ The CI system SHALL cache build artifacts to reduce workflow execution time.
 **When** a new CI execution starts with unchanged dependencies  
 **Then** cached Cargo registry and build artifacts SHALL be restored  
 **And** build time SHALL be significantly reduced compared to a cold build
-

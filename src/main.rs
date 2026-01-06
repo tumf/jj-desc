@@ -46,19 +46,34 @@ async fn main() -> Result<()> {
 
     // Get diff from jj
     let revision = args.revision.as_deref();
-    let diff = jj::get_diff(revision)
-        .await
-        .context("Failed to get diff from jj")?;
-
-    info!("Retrieved diff ({} bytes)", diff.len());
-
-    // Generate description using LLM
-    let client = llm::create_client(config).context("Failed to create LLM client")?;
-
-    let description = client
-        .generate_description(&diff)
-        .await
-        .context("Failed to generate description")?;
+    
+    // Try to get the diff, but handle empty diffs specially for merge commits
+    let diff_result = jj::get_diff(revision).await;
+    
+    let description = match diff_result {
+        Ok(diff) => {
+            info!("Retrieved diff ({} bytes)", diff.len());
+            
+            // Generate description using LLM
+            let client = llm::create_client(config).context("Failed to create LLM client")?;
+            
+            client
+                .generate_description(&diff)
+                .await
+                .context("Failed to generate description")?
+        }
+        Err(error::JjDescError::EmptyDiff) => {
+            // Check if this is a merge commit
+            if jj::is_merge_commit(revision).await? {
+                info!("Empty diff detected, but this is a merge commit");
+                "Merge commit".to_string()
+            } else {
+                return Err(error::JjDescError::EmptyDiff)
+                    .context("No changes found in diff");
+            }
+        }
+        Err(e) => return Err(e).context("Failed to get diff from jj"),
+    };
 
     // Display or apply the description
     if args.dry_run {
