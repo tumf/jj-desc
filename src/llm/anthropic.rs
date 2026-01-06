@@ -127,3 +127,65 @@ impl LlmClient for AnthropicClient {
         Ok(description)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::provider::Provider;
+
+    fn test_config() -> Config {
+        Config {
+            provider: Provider::Anthropic,
+            api_key: "test-key".to_string(),
+            model: "claude-sonnet-4-20250514".to_string(),
+            base_url: "https://api.anthropic.com".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_client_initialization() {
+        let config = test_config();
+        let result = AnthropicClient::new(config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_client_with_custom_model() {
+        let mut config = test_config();
+        config.model = "claude-3-5-sonnet-20241022".to_string();
+        let client = AnthropicClient::new(config.clone()).unwrap();
+        assert_eq!(client.config.model, "claude-3-5-sonnet-20241022");
+    }
+
+    #[test]
+    fn test_client_with_custom_base_url() {
+        let mut config = test_config();
+        config.base_url = "https://custom.anthropic.com".to_string();
+        let client = AnthropicClient::new(config.clone()).unwrap();
+        assert_eq!(client.config.base_url, "https://custom.anthropic.com");
+    }
+
+    #[test]
+    fn test_request_structure() {
+        let request = AnthropicRequest {
+            model: "claude-sonnet-4-20250514".to_string(),
+            max_tokens: 1024,
+            system: SYSTEM_PROMPT.to_string(),
+            messages: vec![AnthropicMessage {
+                role: "user".to_string(),
+                content: "test diff".to_string(),
+            }],
+        };
+
+        // Verify serialization works
+        let json = serde_json::to_string(&request).unwrap();
+        assert!(json.contains("claude-sonnet-4-20250514"));
+        assert!(json.contains("\"max_tokens\":1024"));
+        assert!(json.contains("user"));
+    }
+
+    #[test]
+    fn test_anthropic_version_constant() {
+        assert_eq!(ANTHROPIC_VERSION, "2023-06-01");
+    }
+}

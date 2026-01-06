@@ -27,3 +27,45 @@ pub fn create_client(config: Config) -> Result<Box<dyn LlmClient>, JjDescError> 
         Provider::Anthropic => Ok(Box::new(AnthropicClient::new(config)?)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_config(provider: Provider) -> Config {
+        Config {
+            provider,
+            api_key: "test-key".to_string(),
+            model: provider.default_model().to_string(),
+            base_url: provider.default_base_url().to_string(),
+        }
+    }
+
+    #[test]
+    fn test_create_anthropic_client() {
+        let config = test_config(Provider::Anthropic);
+        let result = create_client(config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_create_openai_client() {
+        let config = test_config(Provider::OpenAI);
+        let result = create_client(config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_create_openrouter_client() {
+        let config = test_config(Provider::OpenRouter);
+        let result = create_client(config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_create_gemini_client() {
+        let config = test_config(Provider::Gemini);
+        let result = create_client(config);
+        assert!(result.is_ok());
+    }
+}
