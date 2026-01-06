@@ -4,6 +4,12 @@ use crate::error::JjDescError;
 use tokio::process::Command;
 use tracing::{debug, instrument};
 
+/// Represents a commit without a description
+#[derive(Debug, Clone)]
+pub struct Commit {
+    pub change_id: String,
+}
+
 /// Get the diff for the specified revision (or current working copy if None)
 #[instrument(skip_all)]
 pub async fn get_diff(revision: Option<&str>) -> Result<String, JjDescError> {
@@ -61,6 +67,42 @@ pub async fn is_merge_commit(revision: Option<&str>) -> Result<bool, JjDescError
     debug!(parent_count, is_merge, "Merge commit check completed");
 
     Ok(is_merge)
+}
+
+/// Get all commits without descriptions in the specified revset
+/// Excludes empty commits (commits with no changes)
+#[instrument(skip_all)]
+pub async fn get_commits_without_description(revset: &str) -> Result<Vec<Commit>, JjDescError> {
+    let full_revset = format!(r#"description(exact:"") & ~empty() & ({})"#, revset);
+
+    let mut cmd = Command::new("jj");
+    cmd.arg("log")
+        .arg("-r")
+        .arg(&full_revset)
+        .arg("--no-graph")
+        .arg("-T")
+        .arg(r#"change_id.short() ++ "\n""#);
+
+    debug!(revset = %full_revset, "Executing jj log to find commits without descriptions");
+
+    let output = cmd.output().await?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(JjDescError::JjCommand(stderr.to_string()));
+    }
+
+    let stdout = String::from_utf8(output.stdout)?;
+    let commits: Vec<Commit> = stdout
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| Commit {
+            change_id: line.trim().to_string(),
+        })
+        .collect();
+
+    debug!(count = commits.len(), "Found commits without descriptions");
+    Ok(commits)
 }
 
 /// Set the description for the specified revision (or current working copy if None)

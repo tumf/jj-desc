@@ -5,10 +5,13 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 ## Features
 
 - 🤖 Automatically generates meaningful commit descriptions from diffs using LLMs
+- 📦 **Backfill mode**: Generate descriptions for multiple commits at once
 - 🔄 Works seamlessly with jj's undo workflow (no confirmation prompts needed)
 - 🎯 Supports multiple LLM providers: OpenRouter, OpenAI, Anthropic, Gemini
 - 🔌 Custom endpoint support (Azure OpenAI, Ollama, proxies, etc.)
 - 🔍 Preview mode with `--dry-run`
+- 💬 Interactive mode for reviewing each description before applying
+- 🎚️ Flexible targeting with jj revset syntax
 - 📝 Follows git commit message best practices
 - 🔀 Handles merge commits automatically (no LLM call needed for empty merge commits)
 
@@ -131,6 +134,37 @@ Generate and apply a description for the current working copy:
 
 ```bash
 jj-desc
+# or explicitly
+jj-desc generate
+```
+
+### Backfill descriptions for multiple commits
+
+Generate descriptions for all commits without descriptions:
+
+```bash
+jj-desc backfill
+```
+
+#### Backfill options
+
+Target specific revisions using jj's revset syntax:
+
+```bash
+# Backfill your own commits
+jj-desc backfill --revisions "mine()"
+
+# Backfill commits in a specific range
+jj-desc backfill --revisions "@..main"
+
+# Limit the number of commits to process
+jj-desc backfill --limit 5
+
+# Preview before applying
+jj-desc backfill --dry-run
+
+# Interactive mode - confirm each description
+jj-desc backfill --interactive
 ```
 
 ### Preview mode
@@ -139,6 +173,7 @@ See what description would be generated without applying it:
 
 ```bash
 jj-desc --dry-run
+jj-desc generate --dry-run
 ```
 
 ### Target specific revision
@@ -146,7 +181,7 @@ jj-desc --dry-run
 Generate description for a specific revision:
 
 ```bash
-jj-desc -r @-
+jj-desc generate -r @-
 ```
 
 ### Use a different provider
@@ -155,6 +190,7 @@ Override the provider:
 
 ```bash
 jj-desc --provider openai
+jj-desc backfill --provider anthropic
 ```
 
 ### Use a different model
@@ -183,17 +219,48 @@ RUST_LOG=debug jj-desc
 
 ### Command-line options
 
+#### Main command
+
 ```
-Usage: jj-desc [OPTIONS]
+Usage: jj-desc [OPTIONS] [COMMAND]
+
+Commands:
+  generate  Generate description for a single commit (default)
+  backfill  Backfill descriptions for multiple commits
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+#### Generate subcommand
+
+```
+Usage: jj-desc generate [OPTIONS]
 
 Options:
       --dry-run                  Preview the generated description without applying it
-      --provider <PROVIDER>      LLM provider to use (openrouter, openai, anthropic, gemini) [env: LLM_PROVIDER]
+      --provider <PROVIDER>      LLM provider to use [env: LLM_PROVIDER]
       --model <MODEL>            Override the LLM model to use [env: LLM_MODEL]
   -r, --revision <REVISION>      Target revision (defaults to current working copy)
-  -v, --verbose                  Enable verbose logging
   -h, --help                     Print help
-  -V, --version                  Print version
+```
+
+#### Backfill subcommand
+
+```
+Usage: jj-desc backfill [OPTIONS]
+
+Options:
+      --dry-run                    Preview the generated descriptions without applying them
+      --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
+      --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
+  -r, --revisions <REVISIONS>      Revset to select target commits [default: mutable()]
+  -n, --limit <LIMIT>              Maximum number of commits to process
+  -i, --interactive                Ask for confirmation before applying each description
+  -h, --help                       Print help
 ```
 
 ## Examples
@@ -232,6 +299,64 @@ jj-desc
 
 # Don't like it? Just undo!
 jj undo
+```
+
+### Example 4: Backfill multiple commits
+
+```bash
+# Fill descriptions for all mutable commits without descriptions
+jj-desc backfill
+
+# Output:
+# Found 3 commit(s) without descriptions
+# Processing 3 commit(s)
+# 
+# Processing: 1/3 (33%)
+# Commit: abc123def456
+# Generated description:
+#   Add user authentication endpoint
+# ✓ Description applied
+# 
+# Processing: 2/3 (66%)
+# Commit: def456ghi789
+# Generated description:
+#   Fix validation bug in login form
+# ✓ Description applied
+# 
+# Processing: 3/3 (100%)
+# Commit: ghi789jkl012
+# Generated description:
+#   Update dependencies
+# ✓ Description applied
+# 
+# ═══════════════════════
+# Summary:
+#   Success:  3
+#   Skipped:  0
+#   Failed:   0
+# ═══════════════════════
+```
+
+### Example 5: Interactive backfill
+
+```bash
+jj-desc backfill --interactive --revisions "mine()"
+
+# For each commit, you'll see:
+# Processing: 1/5 (20%)
+# Commit: abc123
+# Generated description:
+#   Add user authentication
+# 
+# Full description:
+# ─────────────────────
+# Add user authentication with JWT tokens
+# 
+# Implements login and logout endpoints with secure
+# token generation and validation.
+# ─────────────────────
+# Accept (a) / Skip (s) / Quit (q): a
+# ✓ Description applied
 ```
 
 ## How it works
@@ -293,8 +418,12 @@ The pre-commit hooks include:
 
 ```
 src/
-├── main.rs         # Entry point and main flow
-├── cli.rs          # Command-line argument parsing
+├── main.rs         # Entry point and command dispatching
+├── cli.rs          # Command-line argument parsing (subcommands)
+├── commands/       # Command implementations
+│   ├── mod.rs          # Command module exports
+│   ├── generate.rs     # Generate single commit description
+│   └── backfill.rs     # Backfill multiple commit descriptions
 ├── config.rs       # Configuration management
 ├── provider.rs     # Provider enumeration
 ├── error.rs        # Error type definitions
