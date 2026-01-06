@@ -5,7 +5,7 @@ use tracing::info;
 
 use crate::cli::GenerateArgs;
 use crate::config::Config;
-use crate::error;
+use crate::jj::DiffResult;
 use crate::{jj, llm};
 
 pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
@@ -23,11 +23,12 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
     // Get diff from jj
     let revision = args.revision.as_deref();
 
-    // Try to get the diff, but handle empty diffs specially for merge commits
-    let diff_result = jj::get_diff(revision).await;
+    let diff_result = jj::get_diff(revision)
+        .await
+        .context("Failed to get diff from jj")?;
 
     let description = match diff_result {
-        Ok(diff) => {
+        DiffResult::Content(diff) => {
             info!("Retrieved diff ({} bytes)", diff.len());
 
             // Generate description using LLM
@@ -38,16 +39,10 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
                 .await
                 .context("Failed to generate description")?
         }
-        Err(error::JjDescError::EmptyDiff) => {
-            // Check if this is a merge commit
-            if jj::is_merge_commit(revision).await? {
-                info!("Empty diff detected, but this is a merge commit");
-                "Merge commit".to_string()
-            } else {
-                return Err(error::JjDescError::EmptyDiff).context("No changes found in diff");
-            }
+        DiffResult::EmptyMerge => {
+            info!("Empty merge commit detected, using default description");
+            "Merge commit".to_string()
         }
-        Err(e) => return Err(e).context("Failed to get diff from jj"),
     };
 
     // Display or apply the description

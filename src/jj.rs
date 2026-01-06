@@ -10,10 +10,21 @@ pub struct Commit {
     pub change_id: String,
 }
 
+/// Result of getting a diff from jj
+#[derive(Debug, Clone)]
+pub enum DiffResult {
+    /// Normal diff content (non-empty)
+    Content(String),
+    /// Merge commit with empty diff
+    EmptyMerge,
+}
+
 /// Get the diff for the specified revision (or current working copy if None)
-/// For merge commits, returns empty string if there are no changes
+/// Returns DiffResult::EmptyMerge for merge commits with no changes
+/// Returns DiffResult::Content for normal diffs
+/// Returns Err(EmptyDiff) for non-merge commits with no changes
 #[instrument(skip_all)]
-pub async fn get_diff(revision: Option<&str>) -> Result<String, JjDescError> {
+pub async fn get_diff(revision: Option<&str>) -> Result<DiffResult, JjDescError> {
     let mut cmd = Command::new("jj");
     cmd.arg("diff");
 
@@ -35,14 +46,14 @@ pub async fn get_diff(revision: Option<&str>) -> Result<String, JjDescError> {
     if diff.trim().is_empty() {
         // Check if this is a merge commit
         if is_merge_commit(revision).await? {
-            debug!("Empty diff for merge commit, allowing empty diff");
-            return Ok(String::new());
+            debug!("Empty diff for merge commit, returning EmptyMerge");
+            return Ok(DiffResult::EmptyMerge);
         }
         return Err(JjDescError::EmptyDiff);
     }
 
     debug!(diff_len = diff.len(), "Diff retrieved successfully");
-    Ok(diff)
+    Ok(DiffResult::Content(diff))
 }
 
 /// Check if the specified revision is a merge commit (has 2+ parents)
@@ -176,5 +187,72 @@ mod tests {
                 parent_count, expected_is_merge
             );
         }
+    }
+
+    #[test]
+    fn test_diff_result_content() {
+        // Test that Content variant holds the diff string
+        let diff = "diff --git a/file.txt b/file.txt\n+new line".to_string();
+        let result = DiffResult::Content(diff.clone());
+
+        match result {
+            DiffResult::Content(content) => {
+                assert_eq!(content, diff);
+            }
+            DiffResult::EmptyMerge => {
+                panic!("Expected Content variant");
+            }
+        }
+    }
+
+    #[test]
+    fn test_diff_result_empty_merge() {
+        // Test EmptyMerge variant
+        let result = DiffResult::EmptyMerge;
+
+        match result {
+            DiffResult::EmptyMerge => {
+                // Expected case
+            }
+            DiffResult::Content(_) => {
+                panic!("Expected EmptyMerge variant");
+            }
+        }
+    }
+
+    #[test]
+    fn test_diff_result_clone() {
+        // Test that DiffResult can be cloned
+        let original = DiffResult::Content("test diff".to_string());
+        let cloned = original.clone();
+
+        match (&original, &cloned) {
+            (DiffResult::Content(orig), DiffResult::Content(clone)) => {
+                assert_eq!(orig, clone);
+            }
+            _ => panic!("Clone should preserve variant"),
+        }
+
+        let merge_original = DiffResult::EmptyMerge;
+        let merge_cloned = merge_original.clone();
+
+        match (merge_original, merge_cloned) {
+            (DiffResult::EmptyMerge, DiffResult::EmptyMerge) => {
+                // Expected
+            }
+            _ => panic!("Clone should preserve EmptyMerge variant"),
+        }
+    }
+
+    #[test]
+    fn test_diff_result_debug() {
+        // Test that DiffResult implements Debug
+        let content = DiffResult::Content("test".to_string());
+        let debug_str = format!("{:?}", content);
+        assert!(debug_str.contains("Content"));
+
+        let merge = DiffResult::EmptyMerge;
+        let debug_str = format!("{:?}", merge);
+        assert!(debug_str.contains("EmptyMerge"));
     }
 }

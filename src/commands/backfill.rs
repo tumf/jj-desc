@@ -5,6 +5,7 @@ use tracing::{info, warn};
 
 use crate::cli::BackfillArgs;
 use crate::config::Config;
+use crate::jj::DiffResult;
 use crate::{jj, llm};
 
 pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
@@ -66,7 +67,7 @@ pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
         println!("Commit: {}", commit.change_id);
 
         // Get diff for this commit
-        let diff = match jj::get_diff(Some(&commit.change_id)).await {
+        let diff_result = match jj::get_diff(Some(&commit.change_id)).await {
             Ok(d) => d,
             Err(e) => {
                 eprintln!("✗ Failed to get diff: {}", e);
@@ -75,24 +76,19 @@ pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
             }
         };
 
-        // Check if this is a merge commit with empty diff
-        let is_merge = jj::is_merge_commit(Some(&commit.change_id))
-            .await
-            .unwrap_or(false);
-        let is_empty_merge = is_merge && diff.trim().is_empty();
-
-        // Generate description
-        let description = if is_empty_merge {
-            // For empty merge commits, use a default description
-            "Merge branches".to_string()
-        } else {
-            match client.generate_description(&diff).await {
+        // Generate description based on diff result
+        let description = match diff_result {
+            DiffResult::Content(diff) => match client.generate_description(&diff).await {
                 Ok(desc) => desc,
                 Err(e) => {
                     eprintln!("✗ Failed to generate description: {}", e);
                     failure_count += 1;
                     continue;
                 }
+            },
+            DiffResult::EmptyMerge => {
+                // For empty merge commits, use a default description
+                "Merge branches".to_string()
             }
         };
 
