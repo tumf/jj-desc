@@ -43,6 +43,8 @@ async fn main() -> Result<()> {
                 dry_run: false,
                 provider: None,
                 model: None,
+                max_tokens: None,
+                temperature: None,
                 revisions: "::@ & mutable()".to_string(),
                 limit: None,
                 interactive: false,

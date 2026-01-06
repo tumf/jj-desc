@@ -18,6 +18,8 @@ struct AnthropicRequest {
     max_tokens: u32,
     system: String,
     messages: Vec<AnthropicMessage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -71,12 +73,13 @@ impl LlmClient for AnthropicClient {
 
         let request = AnthropicRequest {
             model: self.config.model.clone(),
-            max_tokens: 1024,
+            max_tokens: self.config.max_tokens.unwrap_or(1024),
             system: SYSTEM_PROMPT.to_string(),
             messages: vec![AnthropicMessage {
                 role: "user".to_string(),
                 content: build_user_prompt(diff),
             }],
+            temperature: self.config.temperature.or(Some(0.3)),
         };
 
         debug!(

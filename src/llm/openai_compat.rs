@@ -14,6 +14,10 @@ use tracing::{debug, instrument};
 struct ChatCompletionRequest {
     model: String,
     messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_tokens: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,6 +78,8 @@ impl LlmClient for OpenAICompatClient {
                     content: build_user_prompt(diff),
                 },
             ],
+            max_tokens: self.config.max_tokens.or(Some(1024)),
+            temperature: self.config.temperature.or(Some(0.3)),
         };
 
         debug!(

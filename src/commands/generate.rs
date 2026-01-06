@@ -13,7 +13,10 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
     let config = Config::from_env()
         .context("Failed to load configuration")?
         .with_provider(args.provider)
-        .with_model(args.model);
+        .context("Failed to set provider")?
+        .with_model(args.model)
+        .with_max_tokens(args.max_tokens)
+        .with_temperature(args.temperature);
 
     info!(
         "Using provider: {}, model: {}, base_url: {}",

@@ -42,6 +42,14 @@ pub struct GenerateArgs {
     #[arg(long, env = "LLM_MODEL")]
     pub model: Option<String>,
 
+    /// Maximum tokens for LLM response
+    #[arg(long, env = "LLM_MAX_TOKENS")]
+    pub max_tokens: Option<u32>,
+
+    /// Temperature for LLM response (0.0-2.0)
+    #[arg(long, env = "LLM_TEMPERATURE")]
+    pub temperature: Option<f32>,
+
     /// Target revision (defaults to current working copy)
     #[arg(short, long)]
     pub revision: Option<String>,
@@ -60,6 +68,14 @@ pub struct BackfillArgs {
     /// Override the LLM model to use
     #[arg(long, env = "LLM_MODEL")]
     pub model: Option<String>,
+
+    /// Maximum tokens for LLM response
+    #[arg(long, env = "LLM_MAX_TOKENS")]
+    pub max_tokens: Option<u32>,
+
+    /// Temperature for LLM response (0.0-2.0)
+    #[arg(long, env = "LLM_TEMPERATURE")]
+    pub temperature: Option<f32>,
 
     /// Revset to select target commits (defaults to ::@ & mutable())
     #[arg(short, long, default_value = "::@ & mutable()")]
