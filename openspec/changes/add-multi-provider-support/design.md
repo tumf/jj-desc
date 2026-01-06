@@ -114,6 +114,66 @@ struct AnthropicRequest {
 | Anthropic | `claude-sonnet-4-20250514` |
 | Gemini | `gemini-2.0-flash` |
 
+### 7. カスタムベース URL のサポート
+
+**決定**: 各プロバイダーに対してオプショナルなベース URL 環境変数を提供
+
+| プロバイダー | 環境変数 | デフォルト URL |
+|-------------|---------|---------------|
+| OpenRouter | `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` |
+| OpenAI | `OPENAI_BASE_URL` | `https://api.openai.com/v1` |
+| Anthropic | `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` |
+| Gemini | `GEMINI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai` |
+
+**理由**:
+- **Azure OpenAI 対応**: 企業環境では Azure OpenAI Service を使用することが多い
+- **セルフホスト対応**: vLLM, Ollama, LocalAI などのセルフホスト LLM サーバーに接続可能
+- **プロキシ対応**: 企業のセキュリティポリシーでプロキシ経由のアクセスが必要な場合に対応
+- **開発・テスト**: モック API サーバーを使用したテストが容易になる
+
+**ユースケース例**:
+
+```bash
+# Azure OpenAI を使用
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY=your-azure-key
+export OPENAI_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
+
+# Ollama (OpenAI 互換モード) を使用
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY=dummy  # Ollama は API キー不要だが必須フィールド
+export OPENAI_BASE_URL=http://localhost:11434/v1
+
+# 企業プロキシ経由で Anthropic を使用
+export LLM_PROVIDER=anthropic
+export ANTHROPIC_API_KEY=your-key
+export ANTHROPIC_BASE_URL=https://proxy.company.com/anthropic
+```
+
+**実装詳細**:
+
+```rust
+impl Provider {
+    pub fn default_base_url(&self) -> &'static str {
+        match self {
+            Provider::OpenRouter => "https://openrouter.ai/api/v1",
+            Provider::OpenAI => "https://api.openai.com/v1",
+            Provider::Anthropic => "https://api.anthropic.com",
+            Provider::Gemini => "https://generativelanguage.googleapis.com/v1beta/openai",
+        }
+    }
+    
+    pub fn base_url_env_var(&self) -> &'static str {
+        match self {
+            Provider::OpenRouter => "OPENROUTER_BASE_URL",
+            Provider::OpenAI => "OPENAI_BASE_URL",
+            Provider::Anthropic => "ANTHROPIC_BASE_URL",
+            Provider::Gemini => "GEMINI_BASE_URL",
+        }
+    }
+}
+```
+
 ## ファイル構造の変更
 
 ```
@@ -145,6 +205,9 @@ pub enum LlmError {
     
     #[error("Model not found: {0}")]
     ModelNotFound(String),
+    
+    #[error("Invalid base URL: {0}")]
+    InvalidBaseUrl(String),
 }
 ```
 
@@ -152,10 +215,12 @@ pub enum LlmError {
 
 1. **ユニットテスト**: 各プロバイダークライアントのリクエスト構築をテスト
 2. **統合テスト**: モック HTTP サーバーを使用した E2E テスト
-3. **手動テスト**: 実際の API キーを使用した動作確認
+3. **カスタム URL テスト**: ベース URL のカスタマイズが正しく動作することをテスト
+4. **手動テスト**: 実際の API キーを使用した動作確認
 
 ## 移行パス
 
 1. 既存の `OPENROUTER_*` 環境変数は引き続きサポート
 2. 新規ユーザーは `LLM_PROVIDER` と `LLM_MODEL` を推奨
 3. README に移行ガイドを追加
+4. カスタム URL 設定のドキュメントを追加
