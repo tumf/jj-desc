@@ -162,7 +162,7 @@ Override the default model:
 
 ```bash
 jj-desc --model gpt-4o
-# or
+# or    
 jj-desc --model anthropic/claude-3.5-sonnet
 ```
 
