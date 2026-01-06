@@ -31,7 +31,7 @@ cargo install --path .
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `OPENROUTER_API_KEY` | ✅ | - | Your OpenRouter API key |
-| `OPENROUTER_MODEL` | ❌ | `anthropic/claude-sonnet-4-5` | LLM model to use |
+| `OPENROUTER_MODEL` | ❌ | `anthropic/claude-sonnet-4` | LLM model to use |
 | `OPENROUTER_BASE_URL` | ❌ | `https://openrouter.ai/api/v1` | API base URL |
 
 ### Setup
@@ -76,7 +76,7 @@ jj-desc -r @-
 Override the default model:
 
 ```bash
-jj-desc --model anthropic/claude-opus-4
+jj-desc --model anthropic/claude-3.5-sonnet
 ```
 
 ### Verbose logging

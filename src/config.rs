@@ -3,7 +3,7 @@
 use crate::error::JjDescError;
 use std::env;
 
-const DEFAULT_MODEL: &str = "anthropic/claude-sonnet-4-5";
+const DEFAULT_MODEL: &str = "anthropic/claude-sonnet-4";
 const DEFAULT_BASE_URL: &str = "https://openrouter.ai/api/v1";
 
 #[derive(Debug, Clone)]
