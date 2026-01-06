@@ -202,22 +202,22 @@ For permanent setup, add these to your shell configuration (`~/.bashrc`, `~/.zsh
 
 ## Usage
 
-### Basic usage
+### Basic usage (Backfill mode)
 
-Generate and apply a description for the current working copy:
+By default, `jj-desc` runs in backfill mode, generating descriptions for all mutable commits without descriptions:
 
 ```bash
 jj-desc
 # or explicitly
-jj-desc generate
+jj-desc backfill
 ```
 
-### Backfill descriptions for multiple commits
+### Generate description for a single commit
 
-Generate descriptions for all commits without descriptions:
+Generate and apply a description for the current working copy:
 
 ```bash
-jj-desc backfill
+jj-desc generate
 ```
 
 ### Target specific revision
@@ -299,8 +299,8 @@ RUST_LOG=debug jj-desc
 Usage: jj-desc [OPTIONS] [COMMAND]
 
 Commands:
-  generate  Generate description for a single commit (default)
-  backfill  Backfill descriptions for multiple commits
+  generate  Generate description for a single commit
+  backfill  Backfill descriptions for multiple commits (default)
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -331,7 +331,7 @@ Options:
       --dry-run                    Preview the generated descriptions without applying them
       --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
       --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
-  -r, --revisions <REVISIONS>      Revset to select target commits [default: mutable()]
+  -r, --revisions <REVISIONS>      Revset to select target commits [default: "::@ & mutable()"]
   -n, --limit <LIMIT>              Maximum number of commits to process
   -i, --interactive                Ask for confirmation before applying each description
   -h, --help                       Print help
