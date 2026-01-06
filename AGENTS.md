@@ -188,6 +188,75 @@ GitHub Actions on push/PR to `main`:
 - **lint**: `cargo clippy -- -D warnings`
 - **format**: `cargo fmt --check`
 
+## Release Process
+
+This project uses **cargo-release** for version management and **cargo-dist** for binary distribution.
+
+### Prerequisites
+
+```bash
+cargo install cargo-release
+cargo install git-cliff  # For CHANGELOG generation
+```
+
+### Creating a Release
+
+**Patch release (0.2.0 → 0.2.1):**
+```bash
+cargo release patch --execute
+```
+
+**Minor release (0.2.0 → 0.3.0):**
+```bash
+cargo release minor --execute
+```
+
+**Major release (0.2.0 → 1.0.0):**
+```bash
+cargo release major --execute
+```
+
+### What Happens
+
+1. `cargo-release` bumps version in `Cargo.toml`
+2. `git-cliff` generates/updates `CHANGELOG.md`
+3. Creates a git commit: `chore: release v0.x.x`
+4. Creates a git tag: `v0.x.x`
+5. You manually push: `git push --follow-tags`
+6. GitHub Actions (`release.yml`) builds binaries for all platforms
+7. GitHub Release is created with:
+   - Release notes from CHANGELOG
+   - Pre-built binaries (Linux, macOS, Windows)
+   - Install scripts (shell, PowerShell)
+   - Homebrew formula
+
+### Dry Run (Recommended First)
+
+```bash
+# Preview changes without executing
+cargo release minor
+```
+
+### Manual Alternative
+
+If `cargo-release` doesn't work as expected:
+
+```bash
+# 1. Update version manually
+vim Cargo.toml  # Change version field
+
+# 2. Generate CHANGELOG
+git cliff -o CHANGELOG.md --tag v0.x.x
+
+# 3. Commit and tag
+git add Cargo.toml CHANGELOG.md
+git commit -m "chore: release v0.x.x"
+git tag v0.x.x
+
+# 4. Push
+git push --follow-tags
+```
+
 ## Key Dependencies
 
 | Crate | Purpose |

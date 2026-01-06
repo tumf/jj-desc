@@ -1,6 +1,6 @@
 [package]
 name = "jj-desc"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Generate jj commit descriptions using LLM"
@@ -46,3 +46,19 @@ strip = true
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+# cargo-release configuration
+[package.metadata.release]
+# Don't publish to crates.io
+publish = false
+# Create git tag
+tag = true
+# Tag name format
+tag-name = "v{{version}}"
+# Push to remote
+push = false
+# Sign commits and tags
+sign-commit = false
+sign-tag = false
+# Pre-release hook to update CHANGELOG
+pre-release-hook = ["git", "cliff", "-o", "CHANGELOG.md", "--tag", "v{{version}}"]

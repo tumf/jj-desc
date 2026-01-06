@@ -27,10 +27,11 @@ footer = ""
 trim = true
 
 [git]
-conventional_commits = true
-filter_unconventional = true
+conventional_commits = false
+filter_unconventional = false
 split_commits = false
 commit_parsers = [
+    # Conventional Commits format (if used)
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
     { message = "^doc", group = "Documentation" },
@@ -42,6 +43,18 @@ commit_parsers = [
     { message = "^chore\\(deps\\)", skip = true },
     { message = "^chore|^ci", group = "Miscellaneous Tasks" },
     { body = ".*security", group = "Security" },
+    # Natural language patterns (jj-friendly)
+    { message = "^[Aa]dd", group = "Features" },
+    { message = "^[Ii]mplement", group = "Features" },
+    { message = "^[Ss]upport", group = "Features" },
+    { message = "^[Ff]ix", group = "Bug Fixes" },
+    { message = "^[Rr]esolve", group = "Bug Fixes" },
+    { message = "^[Uu]pdate.*[Dd]oc", group = "Documentation" },
+    { message = "^[Uu]pdate.*README", group = "Documentation" },
+    { message = "^[Rr]efactor", group = "Refactoring" },
+    { message = "^[Tt]est", group = "Testing" },
+    { message = "^[Mm]erge", skip = true },
+    { message = "^[Aa]rchive", skip = true },
 ]
 protect_breaking_commits = false
 filter_commits = false

@@ -477,11 +477,27 @@ The pre-commit hooks run the **same checks as CI**:
 - **On every commit:**
   - `cargo fmt --check` - Validate code formatting (fails if not formatted)
   - `cargo clippy --all-features -- -D warnings` - Lint with zero warnings
-  - Conventional commit message validation
 - **On push:**
   - `cargo test --all-features` - Run all tests
 
 To manually run all checks: `pre-commit run --all-files`
+
+### Release process
+
+This project uses `cargo-release` and `cargo-dist` for releases:
+
+```bash
+# Install tools (one-time setup)
+cargo install cargo-release git-cliff
+
+# Create a release (example: minor version bump 0.2.0 → 0.3.0)
+cargo release minor --execute
+
+# Push tag to trigger GitHub release build
+git push --follow-tags
+```
+
+See [AGENTS.md](AGENTS.md#release-process) for detailed release instructions.
 
 ### Project structure
 
