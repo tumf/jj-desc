@@ -2,20 +2,14 @@
 # https://release-plz.dev/docs/config
 
 [workspace]
-# Allow updating dependencies in Cargo.lock
-allow_dirty = false
 # Generate changelog using git-cliff
 changelog_update = true
+# Use conventional commits for changelog
+changelog_config = "cliff.toml"
 # Create git tag for release
 git_tag_enable = true
 # Create GitHub release
 git_release_enable = true
-# Use conventional commits for changelog
-changelog_config = "cliff.toml"
-# PR title format
-pr_name = "chore: release v{{ version }}"
-# Commit message format
-commit_msg = "chore: release v{{ version }}"
 
 # Package-specific configuration
 [[package]]
