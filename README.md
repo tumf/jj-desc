@@ -17,17 +17,91 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 
 ## Installation
 
-### From source
+### Homebrew (macOS/Linux)
+
+The recommended way to install on macOS or Linux:
 
 ```bash
+brew install tumf/tap/jj-desc
+```
+
+### Pre-built Binaries
+
+Download pre-built binaries for your platform from the [latest release](https://github.com/tumf/jj-desc/releases/latest).
+
+#### macOS
+
+**Using installer script (recommended):**
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-installer.sh | sh
+```
+
+**Manual download:**
+
+- Apple Silicon (M1/M2/M3): [jj-desc-aarch64-apple-darwin.tar.xz](https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-aarch64-apple-darwin.tar.xz)
+- Intel: [jj-desc-x86_64-apple-darwin.tar.xz](https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-x86_64-apple-darwin.tar.xz)
+
+```bash
+# Example for Apple Silicon
+curl -LO https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-aarch64-apple-darwin.tar.xz
+tar xf jj-desc-aarch64-apple-darwin.tar.xz
+sudo mv jj-desc /usr/local/bin/
+```
+
+#### Linux
+
+**Using installer script (recommended):**
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-installer.sh | sh
+```
+
+**Manual download:**
+
+- x86_64: [jj-desc-x86_64-unknown-linux-gnu.tar.xz](https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-x86_64-unknown-linux-gnu.tar.xz)
+- ARM64: [jj-desc-aarch64-unknown-linux-gnu.tar.xz](https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-aarch64-unknown-linux-gnu.tar.xz)
+
+```bash
+# Example for x86_64
+curl -LO https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-x86_64-unknown-linux-gnu.tar.xz
+tar xf jj-desc-x86_64-unknown-linux-gnu.tar.xz
+sudo mv jj-desc /usr/local/bin/
+```
+
+#### Windows
+
+**Using PowerShell installer (recommended):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-installer.ps1 | iex"
+```
+
+**Manual download:**
+
+Download [jj-desc-x86_64-pc-windows-msvc.zip](https://github.com/tumf/jj-desc/releases/latest/download/jj-desc-x86_64-pc-windows-msvc.zip) and extract `jj-desc.exe` to a directory in your PATH.
+
+### From Source (Cargo)
+
+If you have Rust installed:
+
+```bash
+cargo install --git https://github.com/tumf/jj-desc
+```
+
+Or build from a local clone:
+
+```bash
+git clone https://github.com/tumf/jj-desc
+cd jj-desc
 cargo install --path .
 ```
 
 ### Requirements
 
-- Rust 1.85+ (Edition 2024)
 - [jj](https://github.com/martinvonz/jj) installed and available in PATH
 - API key for your chosen LLM provider
+- For building from source: Rust 1.85+ (Edition 2024)
 
 ## Configuration
 
