@@ -11,6 +11,7 @@ pub struct Commit {
 }
 
 /// Get the diff for the specified revision (or current working copy if None)
+/// For merge commits, returns empty string if there are no changes
 #[instrument(skip_all)]
 pub async fn get_diff(revision: Option<&str>) -> Result<String, JjDescError> {
     let mut cmd = Command::new("jj");
@@ -32,6 +33,11 @@ pub async fn get_diff(revision: Option<&str>) -> Result<String, JjDescError> {
     let diff = String::from_utf8(output.stdout)?;
 
     if diff.trim().is_empty() {
+        // Check if this is a merge commit
+        if is_merge_commit(revision).await? {
+            debug!("Empty diff for merge commit, allowing empty diff");
+            return Ok(String::new());
+        }
         return Err(JjDescError::EmptyDiff);
     }
 
@@ -70,10 +76,15 @@ pub async fn is_merge_commit(revision: Option<&str>) -> Result<bool, JjDescError
 }
 
 /// Get all commits without descriptions in the specified revset
-/// Excludes empty commits (commits with no changes)
+/// Includes merge commits even if they are empty (no changes)
+/// Excludes non-merge empty commits
 #[instrument(skip_all)]
 pub async fn get_commits_without_description(revset: &str) -> Result<Vec<Commit>, JjDescError> {
-    let full_revset = format!(r#"description(exact:"") & ~empty() & ({})"#, revset);
+    // Include merge commits even if empty, exclude non-merge empty commits
+    let full_revset = format!(
+        r#"description(exact:"") & ((~empty()) | (empty() & merges())) & ({})"#,
+        revset
+    );
 
     let mut cmd = Command::new("jj");
     cmd.arg("log")
