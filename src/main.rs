@@ -4,12 +4,12 @@ mod error;
 mod jj;
 mod llm;
 mod prompt;
+mod provider;
 
 use anyhow::{Context, Result};
 use clap::Parser;
 use cli::Args;
 use config::Config;
-use llm::OpenRouterClient;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
@@ -36,9 +36,13 @@ async fn main() -> Result<()> {
     // Load configuration
     let config = Config::from_env()
         .context("Failed to load configuration")?
+        .with_provider(args.provider)
         .with_model(args.model);
 
-    info!("Using model: {}", config.model);
+    info!(
+        "Using provider: {}, model: {}, base_url: {}",
+        config.provider, config.model, config.base_url
+    );
 
     // Get diff from jj
     let revision = args.revision.as_deref();
@@ -49,8 +53,8 @@ async fn main() -> Result<()> {
     info!("Retrieved diff ({} bytes)", diff.len());
 
     // Generate description using LLM
-    let client = OpenRouterClient::new(config)
-        .context("Failed to create OpenRouter client")?;
+    let client = llm::create_client(config)
+        .context("Failed to create LLM client")?;
 
     let description = client
         .generate_description(&diff)

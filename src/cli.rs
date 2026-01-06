@@ -1,5 +1,6 @@
 // CLI argument definitions
 
+use crate::provider::Provider;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -14,8 +15,12 @@ pub struct Args {
     #[arg(long)]
     pub dry_run: bool,
 
+    /// LLM provider to use (openrouter, openai, anthropic, gemini)
+    #[arg(long, env = "LLM_PROVIDER")]
+    pub provider: Option<Provider>,
+
     /// Override the LLM model to use
-    #[arg(long, env = "OPENROUTER_MODEL")]
+    #[arg(long, env = "LLM_MODEL")]
     pub model: Option<String>,
 
     /// Target revision (defaults to current working copy)

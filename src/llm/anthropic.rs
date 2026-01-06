@@ -1,41 +1,51 @@
-// OpenRouter API client
+// Anthropic Messages API client
 
 use crate::config::Config;
 use crate::error::JjDescError;
+use crate::llm::LlmClient;
 use crate::prompt::{build_user_prompt, SYSTEM_PROMPT};
+use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tracing::{debug, instrument};
 
+const ANTHROPIC_VERSION: &str = "2023-06-01";
+
 #[derive(Debug, Serialize)]
-struct ChatCompletionRequest {
+struct AnthropicRequest {
     model: String,
-    messages: Vec<Message>,
+    max_tokens: u32,
+    system: String,
+    messages: Vec<AnthropicMessage>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Message {
+struct AnthropicMessage {
     role: String,
     content: String,
 }
 
 #[derive(Debug, Deserialize)]
-struct ChatCompletionResponse {
-    choices: Vec<Choice>,
+struct AnthropicResponse {
+    content: Vec<ContentBlock>,
 }
 
 #[derive(Debug, Deserialize)]
-struct Choice {
-    message: Message,
+struct ContentBlock {
+    #[allow(dead_code)]
+    #[serde(rename = "type")]
+    block_type: String,
+    text: String,
 }
 
-pub struct OpenRouterClient {
+/// Anthropic Messages API client
+pub struct AnthropicClient {
     client: Client,
     config: Config,
 }
 
-impl OpenRouterClient {
+impl AnthropicClient {
     pub fn new(config: Config) -> Result<Self, JjDescError> {
         let client = Client::builder()
             .use_rustls_tls()
@@ -51,34 +61,36 @@ impl OpenRouterClient {
 
         Ok(Self { client, config })
     }
+}
 
+#[async_trait]
+impl LlmClient for AnthropicClient {
     #[instrument(skip(self, diff))]
-    pub async fn generate_description(&self, diff: &str) -> Result<String, JjDescError> {
-        let url = format!("{}/chat/completions", self.config.base_url);
+    async fn generate_description(&self, diff: &str) -> Result<String, JjDescError> {
+        let url = format!("{}/v1/messages", self.config.base_url);
         
-        let request = ChatCompletionRequest {
+        let request = AnthropicRequest {
             model: self.config.model.clone(),
-            messages: vec![
-                Message {
-                    role: "system".to_string(),
-                    content: SYSTEM_PROMPT.to_string(),
-                },
-                Message {
-                    role: "user".to_string(),
-                    content: build_user_prompt(diff),
-                },
-            ],
+            max_tokens: 1024,
+            system: SYSTEM_PROMPT.to_string(),
+            messages: vec![AnthropicMessage {
+                role: "user".to_string(),
+                content: build_user_prompt(diff),
+            }],
         };
 
-        debug!(model = %self.config.model, url = %url, "Sending request to OpenRouter");
+        debug!(
+            model = %self.config.model, 
+            url = %url,
+            "Sending request to Anthropic API"
+        );
 
         let response = self
             .client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.config.api_key))
+            .header("x-api-key", &self.config.api_key)
+            .header("anthropic-version", ANTHROPIC_VERSION)
             .header("Content-Type", "application/json")
-            .header("HTTP-Referer", "https://github.com/tumf/jj-desc")
-            .header("X-Title", "jj-desc")
             .json(&request)
             .send()
             .await?;
@@ -92,14 +104,13 @@ impl OpenRouterClient {
             )));
         }
 
-        let completion: ChatCompletionResponse = response.json().await?;
+        let anthropic_response: AnthropicResponse = response.json().await?;
 
-        let description = completion
-            .choices
-            .first()
-            .ok_or_else(|| JjDescError::JjCommand("No choices in API response".to_string()))?
-            .message
+        let description = anthropic_response
             .content
+            .first()
+            .ok_or_else(|| JjDescError::JjCommand("No content blocks in API response".to_string()))?
+            .text
             .trim()
             .to_string();
 
