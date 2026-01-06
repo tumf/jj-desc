@@ -5,7 +5,7 @@ use tracing::{info, warn};
 
 use crate::cli::BackfillArgs;
 use crate::config::Config;
-use crate::jj::DiffResult;
+use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION};
 use crate::{jj, llm};
 
 pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
@@ -91,13 +91,11 @@ pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
             },
             DiffResult::EmptyMerge => {
                 // For empty merge commits, use a default description
-                "Merge branches".to_string()
+                EMPTY_MERGE_DESCRIPTION.to_string()
             }
             DiffResult::EmptyNonMerge => {
-                // For empty non-merge commits, skip them
-                println!("○ Skipped (empty commit)");
-                skip_count += 1;
-                continue;
+                // For empty non-merge commits with bookmarks, use placeholder description
+                EMPTY_NON_MERGE_DESCRIPTION.to_string()
             }
         };
 

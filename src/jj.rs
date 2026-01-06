@@ -21,6 +21,12 @@ pub enum DiffResult {
     EmptyNonMerge,
 }
 
+/// Default description for empty merge commits
+pub const EMPTY_MERGE_DESCRIPTION: &str = "Merge branches";
+
+/// Default description for empty non-merge commits (placeholders)
+pub const EMPTY_NON_MERGE_DESCRIPTION: &str = "(empty commit)";
+
 /// Get the diff for the specified revision (or current working copy if None)
 /// Returns DiffResult::EmptyMerge for merge commits with no changes
 /// Returns DiffResult::EmptyNonMerge for non-merge commits with no changes
@@ -90,14 +96,18 @@ pub async fn is_merge_commit(revision: Option<&str>) -> Result<bool, JjDescError
 }
 
 /// Get all commits without descriptions in the specified revset
-/// Includes merge commits even if they are empty (no changes)
-/// Excludes non-merge empty commits to avoid unnecessary processing in backfill
+/// Includes all commits without descriptions:
+/// - Non-empty commits (have changes to describe via LLM)
+/// - Empty merge commits (get "Merge branches" placeholder)
+/// - Empty non-merge commits (get "(empty commit)" placeholder)
 #[instrument(skip_all)]
 pub async fn get_commits_without_description(revset: &str) -> Result<Vec<Commit>, JjDescError> {
-    // Include merge commits even if empty, exclude non-merge empty commits
-    // Note: Empty non-merge commits can still be processed via generate command
+    // Include all commits without descriptions, regardless of empty status
+    // - Non-empty commits: LLM generates description from diff
+    // - Empty merge commits: Use "Merge branches" placeholder
+    // - Empty non-merge commits: Use "(empty commit)" placeholder
     let full_revset = format!(
-        r#"description(exact:"") & ((~empty()) | (empty() & merges())) & ({})"#,
+        r#"description(exact:"") & ({})"#,
         revset
     );
 
@@ -296,5 +306,30 @@ mod tests {
                 panic!("Expected EmptyNonMerge variant");
             }
         }
+    }
+
+    #[test]
+    fn test_empty_merge_description_constant() {
+        // Verify the constant value for empty merge commits
+        assert_eq!(EMPTY_MERGE_DESCRIPTION, "Merge branches");
+        // Ensure it's not empty
+        assert!(!EMPTY_MERGE_DESCRIPTION.is_empty());
+    }
+
+    #[test]
+    fn test_empty_non_merge_description_constant() {
+        // Verify the constant value for empty non-merge commits
+        assert_eq!(EMPTY_NON_MERGE_DESCRIPTION, "(empty commit)");
+        // Ensure it's not empty
+        assert!(!EMPTY_NON_MERGE_DESCRIPTION.is_empty());
+        // Verify it's wrapped in parentheses (convention for placeholder)
+        assert!(EMPTY_NON_MERGE_DESCRIPTION.starts_with('('));
+        assert!(EMPTY_NON_MERGE_DESCRIPTION.ends_with(')'));
+    }
+
+    #[test]
+    fn test_description_constants_are_different() {
+        // Ensure merge and non-merge descriptions are distinct
+        assert_ne!(EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION);
     }
 }

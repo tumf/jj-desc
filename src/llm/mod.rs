@@ -37,7 +37,10 @@ mod tests {
             provider,
             api_key: "test-key".to_string(),
             model: provider.default_model().to_string(),
+            model_source: crate::config::ConfigSource::Default,
             base_url: provider.default_base_url().to_string(),
+            max_tokens: None,
+            temperature: None,
         }
     }
 

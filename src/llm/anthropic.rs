@@ -138,7 +138,10 @@ mod tests {
             provider: Provider::Anthropic,
             api_key: "test-key".to_string(),
             model: "claude-sonnet-4-20250514".to_string(),
+            model_source: crate::config::ConfigSource::Default,
             base_url: "https://api.anthropic.com".to_string(),
+            max_tokens: None,
+            temperature: None,
         }
     }
 
@@ -175,6 +178,7 @@ mod tests {
                 role: "user".to_string(),
                 content: "test diff".to_string(),
             }],
+            temperature: None,
         };
 
         // Verify serialization works

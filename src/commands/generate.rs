@@ -5,7 +5,7 @@ use tracing::info;
 
 use crate::cli::GenerateArgs;
 use crate::config::Config;
-use crate::jj::DiffResult;
+use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION};
 use crate::{jj, llm};
 
 pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
@@ -44,11 +44,11 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
         }
         DiffResult::EmptyMerge => {
             info!("Empty merge commit detected, using default description");
-            "Merge commit".to_string()
+            EMPTY_MERGE_DESCRIPTION.to_string()
         }
         DiffResult::EmptyNonMerge => {
-            info!("Empty non-merge commit detected, using default description");
-            "Empty commit".to_string()
+            info!("Empty non-merge commit detected, using placeholder description");
+            EMPTY_NON_MERGE_DESCRIPTION.to_string()
         }
     };
 
