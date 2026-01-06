@@ -105,15 +105,12 @@ impl LlmClient for OpenAICompatClient {
         let response = req.json(&request).send().await?;
 
         if !response.status().is_success() {
-            let status = response.status();
-            let error_text = response
+            let status = response.status().as_u16();
+            let body = response
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(JjDescError::JjCommand(format!(
-                "API request failed with status {}: {}",
-                status, error_text
-            )));
+            return Err(JjDescError::ApiStatus { status, body });
         }
 
         let completion: ChatCompletionResponse = response.json().await?;
@@ -121,7 +118,7 @@ impl LlmClient for OpenAICompatClient {
         let description = completion
             .choices
             .first()
-            .ok_or_else(|| JjDescError::JjCommand("No choices in API response".to_string()))?
+            .ok_or_else(|| JjDescError::ApiResponseError("No choices in API response".to_string()))?
             .message
             .content
             .trim()

@@ -12,11 +12,14 @@ pub enum JjDescError {
     #[error("Invalid provider: {0}. Valid providers are: openrouter, openai, anthropic, gemini")]
     InvalidProvider(String),
 
-    #[error("No changes found in diff")]
-    EmptyDiff,
-
     #[error("jj command failed: {0}")]
     JjCommand(String),
+
+    #[error("API request failed with status {status}: {body}")]
+    ApiStatus { status: u16, body: String },
+
+    #[error("API response error: {0}")]
+    ApiResponseError(String),
 
     #[error("API request failed: {0}")]
     ApiError(#[from] reqwest::Error),
@@ -38,15 +41,26 @@ mod tests {
     #[test]
     fn test_error_display() {
         let err = JjDescError::MissingApiKey;
-        assert!(
-            err.to_string()
-                .contains("API key environment variable is not set")
-        );
-
-        let err = JjDescError::EmptyDiff;
-        assert_eq!(err.to_string(), "No changes found in diff");
+        assert!(err
+            .to_string()
+            .contains("API key environment variable is not set"));
 
         let err = JjDescError::JjCommand("test error".to_string());
         assert_eq!(err.to_string(), "jj command failed: test error");
+
+        let err = JjDescError::ApiStatus {
+            status: 401,
+            body: "Unauthorized".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "API request failed with status 401: Unauthorized"
+        );
+
+        let err = JjDescError::ApiResponseError("No choices in response".to_string());
+        assert_eq!(
+            err.to_string(),
+            "API response error: No choices in response"
+        );
     }
 }

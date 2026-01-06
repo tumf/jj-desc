@@ -26,10 +26,13 @@ pub struct Config {
 impl Config {
     pub fn from_env() -> Result<Self, JjDescError> {
         // Determine provider
-        let provider = env::var("LLM_PROVIDER")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Provider::OpenRouter);
+        let provider = match env::var("LLM_PROVIDER") {
+            Ok(s) => s.parse()?,
+            Err(env::VarError::NotPresent) => Provider::OpenRouter,
+            Err(env::VarError::NotUnicode(_)) => {
+                return Err(JjDescError::InvalidProvider("non-UTF8 value".into()));
+            }
+        };
 
         // Get API key for the selected provider
         let api_key = env::var(provider.api_key_env_var())
@@ -208,9 +211,13 @@ mod tests {
             let original_api_key = env::var("OPENROUTER_API_KEY").ok();
             let original_model = env::var("LLM_MODEL").ok();
 
-            env::set_var("OPENROUTER_API_KEY", "test-key");
-            env::remove_var("LLM_MODEL");
+            // Clear all env vars first
             env::remove_var("LLM_PROVIDER");
+            env::remove_var("LLM_MODEL");
+            env::remove_var("OPENROUTER_API_KEY");
+
+            // Set only what we need
+            env::set_var("OPENROUTER_API_KEY", "test-key");
 
             let config = Config::from_env().unwrap();
             assert_eq!(config.model_source, ConfigSource::Default);
@@ -353,5 +360,67 @@ mod tests {
 
         assert_eq!(updated.max_tokens, Some(512));
         assert_eq!(updated.temperature, Some(0.5));
+    }
+
+    #[test]
+    fn test_invalid_provider() {
+        // This test modifies environment variables, which is inherently unsafe in a
+        // multi-threaded test environment. Run with `--test-threads=1` if needed.
+        unsafe {
+            // Save original env
+            let original_provider = env::var("LLM_PROVIDER").ok();
+            let original_api_key = env::var("OPENROUTER_API_KEY").ok();
+
+            // Clear all env vars first, then set invalid provider
+            env::remove_var("LLM_PROVIDER");
+            env::remove_var("OPENROUTER_API_KEY");
+            env::set_var("LLM_PROVIDER", "invalid_provider");
+            env::set_var("OPENROUTER_API_KEY", "test-key");
+
+            let result = Config::from_env();
+            assert!(result.is_err());
+            if let Err(JjDescError::InvalidProvider(msg)) = result {
+                assert!(msg.contains("invalid_provider"));
+            } else {
+                panic!("Expected InvalidProvider error");
+            }
+
+            // Restore original env
+            env::remove_var("LLM_PROVIDER");
+            env::remove_var("OPENROUTER_API_KEY");
+            if let Some(val) = original_provider {
+                env::set_var("LLM_PROVIDER", val);
+            }
+            if let Some(val) = original_api_key {
+                env::set_var("OPENROUTER_API_KEY", val);
+            }
+        }
+    }
+
+    #[test]
+    fn test_missing_provider_uses_default() {
+        // This test modifies environment variables, which is inherently unsafe in a
+        // multi-threaded test environment. Run with `--test-threads=1` if needed.
+        unsafe {
+            // Save original env
+            let original_provider = env::var("LLM_PROVIDER").ok();
+            let original_api_key = env::var("OPENROUTER_API_KEY").ok();
+
+            // Remove provider env var
+            env::remove_var("LLM_PROVIDER");
+            env::set_var("OPENROUTER_API_KEY", "test-key");
+
+            let config = Config::from_env().unwrap();
+            assert_eq!(config.provider, Provider::OpenRouter);
+
+            // Restore original env
+            env::remove_var("OPENROUTER_API_KEY");
+            if let Some(val) = original_provider {
+                env::set_var("LLM_PROVIDER", val);
+            }
+            if let Some(val) = original_api_key {
+                env::set_var("OPENROUTER_API_KEY", val);
+            }
+        }
     }
 }
