@@ -41,9 +41,10 @@ mod tests {
     #[test]
     fn test_error_display() {
         let err = JjDescError::MissingApiKey;
-        assert!(err
-            .to_string()
-            .contains("API key environment variable is not set"));
+        assert!(
+            err.to_string()
+                .contains("API key environment variable is not set")
+        );
 
         let err = JjDescError::JjCommand("test error".to_string());
         assert_eq!(err.to_string(), "jj command failed: test error");

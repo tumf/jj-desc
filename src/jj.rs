@@ -106,10 +106,7 @@ pub async fn get_commits_without_description(revset: &str) -> Result<Vec<Commit>
     // - Non-empty commits: LLM generates description from diff
     // - Empty merge commits: Use "Merge branches" placeholder
     // - Empty non-merge commits: Use "(empty commit)" placeholder
-    let full_revset = format!(
-        r#"description(exact:"") & ({})"#,
-        revset
-    );
+    let full_revset = format!(r#"description(exact:"") & ({})"#, revset);
 
     let mut cmd = Command::new("jj");
     cmd.arg("log")
