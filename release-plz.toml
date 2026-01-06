@@ -12,16 +12,13 @@ git_tag_enable = true
 git_release_enable = true
 # Use conventional commits for changelog
 changelog_config = "cliff.toml"
+# PR title format
+pr_name = "chore: release v{{ version }}"
+# Commit message format
+commit_msg = "chore: release v{{ version }}"
 
 # Package-specific configuration
 [[package]]
 name = "jj-desc"
 # Don't publish to crates.io (GitHub releases only)
 publish = false
-
-# PR settings
-[workspace.pr]
-# PR title format
-pr_name = "chore: release v{{ version }}"
-# Commit message format
-commit_msg = "chore: release v{{ version }}"
