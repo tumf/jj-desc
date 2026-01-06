@@ -1,0 +1,23 @@
+# release-plz configuration
+# https://release-plz.dev/docs/config
+
+[workspace]
+# Allow updating dependencies in Cargo.lock
+allow_dirty = false
+# Generate changelog using git-cliff
+changelog_update = true
+# Create git tag for release
+git_tag_enable = true
+# Release to crates.io (set to false if not publishing)
+release_enable = false
+# Create GitHub release
+git_release_enable = true
+# Use conventional commits for changelog
+changelog_config = "cliff.toml"
+
+# PR settings
+[workspace.pr]
+# PR title format
+pr_name = "chore: release v{{ version }}"
+# Commit message format
+commit_msg = "chore: release v{{ version }}"
