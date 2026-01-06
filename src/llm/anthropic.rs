@@ -96,15 +96,12 @@ impl LlmClient for AnthropicClient {
             .await?;
 
         if !response.status().is_success() {
-            let status = response.status();
-            let error_text = response
+            let status = response.status().as_u16();
+            let body = response
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(JjDescError::JjCommand(format!(
-                "API request failed with status {}: {}",
-                status, error_text
-            )));
+            return Err(JjDescError::ApiStatus { status, body });
         }
 
         let anthropic_response: AnthropicResponse = response.json().await?;
@@ -112,7 +109,9 @@ impl LlmClient for AnthropicClient {
         let description = anthropic_response
             .content
             .first()
-            .ok_or_else(|| JjDescError::JjCommand("No content blocks in API response".to_string()))?
+            .ok_or_else(|| {
+                JjDescError::ApiResponseError("No content blocks in API response".to_string())
+            })?
             .text
             .trim()
             .to_string();
