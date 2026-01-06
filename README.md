@@ -130,20 +130,22 @@ For permanent setup, add these to your shell configuration (`~/.bashrc`, `~/.zsh
 
 ### Basic usage
 
-Generate and apply a description for the current working copy:
+Generate descriptions for all mutable commits without descriptions:
 
 ```bash
 jj-desc
 # or explicitly
-jj-desc generate
+jj-desc backfill
 ```
 
-### Backfill descriptions for multiple commits
+### Generate description for a single commit
 
-Generate descriptions for all commits without descriptions:
+Generate and apply a description for a specific revision:
 
 ```bash
-jj-desc backfill
+jj-desc generate
+# or target a specific revision
+jj-desc generate -r @
 ```
 
 #### Backfill options
@@ -225,8 +227,8 @@ RUST_LOG=debug jj-desc
 Usage: jj-desc [OPTIONS] [COMMAND]
 
 Commands:
-  generate  Generate description for a single commit (default)
-  backfill  Backfill descriptions for multiple commits
+  generate  Generate description for a single commit
+  backfill  Backfill descriptions for multiple commits (default)
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -265,40 +267,60 @@ Options:
 
 ## Examples
 
-### Example 1: Basic workflow
+### Example 1: Basic workflow (backfill)
 
 ```bash
-# Make some changes
+# Make some changes across multiple commits
+jj new -m "temp1"
 echo "fn hello() {}" >> lib.rs
 
-# Generate description
+jj new -m "temp2"
+echo "fn world() {}" >> lib.rs
+
+# Generate descriptions for all commits
 jj-desc
+
+# Output:
+# Found 2 commit(s) without descriptions
+# Processing 2 commit(s)
+# 
+# Processing: 1/2 (50%)
+# Commit: abc123def456
+# Generated description:
+#   Add hello function to lib.rs
+# ✓ Description applied
+# 
+# Processing: 2/2 (100%)
+# Commit: def456ghi789
+# Generated description:
+#   Add world function to lib.rs
+# ✓ Description applied
+# 
+# ═══════════════════════
+# Summary:
+#   Success:  2
+#   Skipped:  0
+#   Failed:   0
+# ═══════════════════════
+```
+
+### Example 2: Generate for single commit
+
+```bash
+jj-desc generate
 
 # Output:
 # Applied description:
 # ─────────────────────
-# Add hello function to lib.rs
+# Add user authentication with JWT tokens
 ```
 
-### Example 2: Preview before applying
+### Example 3: Preview before applying
 
 ```bash
 jj-desc --dry-run
 
-# Output:
-# Generated description (not applied):
-# ─────────────────────
-# Add user authentication with JWT tokens
-```
-
-### Example 3: Revert if needed
-
-```bash
-jj-desc
-# (description applied)
-
-# Don't like it? Just undo!
-jj undo
+# Output shows what would be generated without applying
 ```
 
 ### Example 4: Backfill multiple commits

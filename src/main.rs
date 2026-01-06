@@ -9,7 +9,7 @@ mod provider;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use cli::{Args, Command, GenerateArgs};
+use cli::{Args, BackfillArgs, Command};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
@@ -33,19 +33,21 @@ async fn main() -> Result<()> {
     tracing::subscriber::set_global_default(subscriber)
         .context("Failed to set tracing subscriber")?;
 
-    // Execute command (default to Generate if no subcommand provided)
+    // Execute command (default to Backfill if no subcommand provided)
     match args.command {
         Some(Command::Generate(generate_args)) => commands::execute_generate(generate_args).await,
         Some(Command::Backfill(backfill_args)) => commands::execute_backfill(backfill_args).await,
         None => {
-            // Backward compatibility: no subcommand means generate with defaults
-            let generate_args = GenerateArgs {
+            // Default: backfill with defaults
+            let backfill_args = BackfillArgs {
                 dry_run: false,
                 provider: None,
                 model: None,
-                revision: None,
+                revisions: "::@ & mutable()".to_string(),
+                limit: None,
+                interactive: false,
             };
-            commands::execute_generate(generate_args).await
+            commands::execute_backfill(backfill_args).await
         }
     }
 }

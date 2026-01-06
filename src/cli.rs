@@ -21,10 +21,10 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    /// Generate description for a single commit (default)
+    /// Generate description for a single commit
     Generate(GenerateArgs),
 
-    /// Backfill descriptions for multiple commits
+    /// Backfill descriptions for multiple commits (default)
     Backfill(BackfillArgs),
 }
 
