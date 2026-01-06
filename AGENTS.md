@@ -46,11 +46,17 @@ cargo test -- --test-threads=1          # Single-threaded (env var tests)
 ## Lint & Format
 
 ```bash
-cargo fmt                        # Format code
-cargo fmt --check                # Check formatting (CI)
-cargo clippy -- -D warnings      # Lint (warnings as errors)
-./scripts/pre-commit-install.sh  # Install pre-commit hooks
+cargo fmt                                      # Format code
+cargo fmt --check                              # Check formatting (CI)
+cargo clippy --all-features -- -D warnings     # Lint (warnings as errors, CI)
+./scripts/pre-commit-install.sh                # Install pre-commit hooks (recommended)
+pre-commit run --all-files                     # Run all pre-commit checks manually
 ```
+
+**Pre-commit hooks:** Install hooks to automatically run CI checks before commit/push:
+- Prevents CI failures by catching issues locally
+- Same checks as GitHub Actions CI
+- Use `git commit --no-verify` to skip (not recommended)
 
 ## Code Style
 

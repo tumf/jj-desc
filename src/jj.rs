@@ -140,7 +140,7 @@ mod tests {
         // 1. Initialize a jj repository
         // 2. Create a merge commit: jj new main feature -m "test merge"
         // 3. Run: cargo test -- --ignored test_is_merge_commit_requires_jj_repo
-        
+
         // Test with current revision (@)
         let result = is_merge_commit(None).await;
         // Should not panic - either returns Ok(true/false) or Err

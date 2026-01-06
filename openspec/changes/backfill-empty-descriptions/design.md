@@ -41,13 +41,13 @@ src/
 2. For each commit:
    a. jj diff --revision <change_id>
       └─> diff 取得
-   
+
    b. LLM API 呼び出し
       └─> description 生成
-   
+
    c. --interactive の場合: ユーザー確認
       └─> Accept / Skip / Edit
-   
+
    d. jj describe --revision <change_id> -m '<description>'
       └─> description 設定
 
@@ -68,7 +68,7 @@ src/
 - `description(exact:"")` で空 description のみを確実にフィルタ
 - ユーザーが `mutable()`, `mine()`, `@..main` など自由に指定可能
 
-**代替案**: 
+**代替案**:
 - ❌ すべてのコミットを取得して Rust 側でフィルタ → 非効率
 
 ### 2. エラーハンドリング戦略
@@ -131,7 +131,7 @@ enum Command {
     /// Generate description for a single commit (default)
     #[command(default)]
     Generate(GenerateArgs),
-    
+
     /// Backfill descriptions for multiple commits
     Backfill(BackfillArgs),
 }

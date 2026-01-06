@@ -8,25 +8,25 @@
 
 #### Scenario: デフォルトの mutable コミットに対する一括処理
 
-**Given**: リポジトリに空 description のコミットが複数存在する  
-**When**: `jj-desc backfill` を実行  
-**Then**: 
+**Given**: リポジトリに空 description のコミットが複数存在する
+**When**: `jj-desc backfill` を実行
+**Then**:
 - `mutable()` に含まれる空 description のコミットすべてに description が設定される
 - 各コミットの処理結果（成功/失敗）が表示される
 - 最終的に成功件数と失敗件数のサマリーが表示される
 
 #### Scenario: revset で対象範囲を指定
 
-**Given**: リポジトリに複数のブランチとコミットが存在する  
-**When**: `jj-desc backfill --revisions "mine()"` を実行  
+**Given**: リポジトリに複数のブランチとコミットが存在する
+**When**: `jj-desc backfill --revisions "mine()"` を実行
 **Then**:
 - 自分が作成したコミットのうち、空 description のものだけが処理される
 - 他人のコミットや、既に description があるコミットは無視される
 
 #### Scenario: dry-run モードでプレビュー
 
-**Given**: 空 description のコミットが5件存在する  
-**When**: `jj-desc backfill --dry-run` を実行  
+**Given**: 空 description のコミットが5件存在する
+**When**: `jj-desc backfill --dry-run` を実行
 **Then**:
 - 各コミットに対して生成される description が表示される
 - 実際には `jj describe` コマンドは実行されない
@@ -34,8 +34,8 @@
 
 #### Scenario: limit で処理件数を制限
 
-**Given**: 空 description のコミットが20件存在する  
-**When**: `jj-desc backfill --limit 5` を実行  
+**Given**: 空 description のコミットが20件存在する
+**When**: `jj-desc backfill --limit 5` を実行
 **Then**:
 - 最初の5件だけが処理される
 - 残りの15件は無視される
@@ -47,8 +47,8 @@
 
 #### Scenario: インタラクティブモードで個別確認
 
-**Given**: 空 description のコミットが3件存在する  
-**When**: `jj-desc backfill --interactive` を実行  
+**Given**: 空 description のコミットが3件存在する
+**When**: `jj-desc backfill --interactive` を実行
 **Then**:
 - 1件目のコミットの diff と生成された description が表示される
 - ユーザーに選択肢が提示される: "Accept (a) / Skip (s) / Edit (e) / Quit (q)"
@@ -63,8 +63,8 @@
 
 #### Scenario: API エラー時の続行
 
-**Given**: 空 description のコミットが5件存在する  
-**When**: 3件目の処理中に API エラーが発生  
+**Given**: 空 description のコミットが5件存在する
+**When**: 3件目の処理中に API エラーが発生
 **Then**:
 - 3件目のエラーメッセージが表示される
 - 4件目、5件目の処理は続行される
@@ -76,16 +76,16 @@
 
 #### Scenario: 引数なし実行の互換性
 
-**Given**: 既存のユーザーが `jj-desc` を引数なしで使用している  
-**When**: `jj-desc` を実行（サブコマンドなし）  
+**Given**: 既存のユーザーが `jj-desc` を引数なしで使用している
+**When**: `jj-desc` を実行（サブコマンドなし）
 **Then**:
 - 現在のコミット (`@`) に対して description を生成する（既存の動作）
 - エラーが発生しない
 
 #### Scenario: 既存オプションの互換性
 
-**Given**: 既存のオプション（`--revision`, `--dry-run` など）を使用  
-**When**: `jj-desc --revision abc123` を実行  
+**Given**: 既存のオプション（`--revision`, `--dry-run` など）を使用
+**When**: `jj-desc --revision abc123` を実行
 **Then**:
 - 指定したコミットに対して description を生成する
 - `generate` サブコマンドと同じ動作をする

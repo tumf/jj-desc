@@ -20,23 +20,26 @@ repos:
 
   - repo: local
     hooks:
-      - id: cargo-fmt
-        name: cargo fmt
-        entry: cargo fmt --
+      # CI format check - runs on every commit
+      - id: cargo-fmt-check
+        name: cargo fmt --check (CI format validation)
+        entry: cargo fmt --check
         language: system
         types: [rust]
         pass_filenames: false
 
+      # CI clippy check - runs on every commit
       - id: cargo-clippy
-        name: cargo clippy
-        entry: cargo clippy -- -D warnings
+        name: cargo clippy -- -D warnings (CI lint)
+        entry: cargo clippy --all-features -- -D warnings
         language: system
         types: [rust]
         pass_filenames: false
 
+      # CI test check - runs on pre-push only to save time
       - id: cargo-test
-        name: cargo test
-        entry: cargo test
+        name: cargo test --all-features (CI test)
+        entry: cargo test --all-features
         language: system
         types: [rust]
         pass_filenames: false

@@ -54,23 +54,23 @@ Yes─┴─No      │
 pub async fn is_merge_commit(revision: Option<&str>) -> Result<bool, JjDescError> {
     let mut cmd = Command::new("jj");
     cmd.args(["log", "-T", "parents.len()", "--no-graph"]);
-    
+
     if let Some(rev) = revision {
         cmd.arg("-r").arg(rev);
     } else {
         cmd.arg("-r").arg("@");
     }
-    
+
     let output = cmd.output().await?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(JjDescError::JjCommand(stderr.to_string()));
     }
-    
+
     let count_str = String::from_utf8(output.stdout)?;
     let parent_count: usize = count_str.trim().parse().unwrap_or(0);
-    
+
     Ok(parent_count >= 2)
 }
 ```

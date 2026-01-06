@@ -201,7 +201,7 @@ Override the default model:
 
 ```bash
 jj-desc --model gpt-4o
-# or    
+# or
 jj-desc --model anthropic/claude-3.5-sonnet
 ```
 
@@ -283,19 +283,19 @@ jj-desc
 # Output:
 # Found 2 commit(s) without descriptions
 # Processing 2 commit(s)
-# 
+#
 # Processing: 1/2 (50%)
 # Commit: abc123def456
 # Generated description:
 #   Add hello function to lib.rs
 # ✓ Description applied
-# 
+#
 # Processing: 2/2 (100%)
 # Commit: def456ghi789
 # Generated description:
 #   Add world function to lib.rs
 # ✓ Description applied
-# 
+#
 # ═══════════════════════
 # Summary:
 #   Success:  2
@@ -332,25 +332,25 @@ jj-desc backfill
 # Output:
 # Found 3 commit(s) without descriptions
 # Processing 3 commit(s)
-# 
+#
 # Processing: 1/3 (33%)
 # Commit: abc123def456
 # Generated description:
 #   Add user authentication endpoint
 # ✓ Description applied
-# 
+#
 # Processing: 2/3 (66%)
 # Commit: def456ghi789
 # Generated description:
 #   Fix validation bug in login form
 # ✓ Description applied
-# 
+#
 # Processing: 3/3 (100%)
 # Commit: ghi789jkl012
 # Generated description:
 #   Update dependencies
 # ✓ Description applied
-# 
+#
 # ═══════════════════════
 # Summary:
 #   Success:  3
@@ -369,11 +369,11 @@ jj-desc backfill --interactive --revisions "mine()"
 # Commit: abc123
 # Generated description:
 #   Add user authentication
-# 
+#
 # Full description:
 # ─────────────────────
 # Add user authentication with JWT tokens
-# 
+#
 # Implements login and logout endpoints with secure
 # token generation and validation.
 # ─────────────────────
@@ -431,10 +431,15 @@ brew install pre-commit
 ./scripts/pre-commit-install.sh
 ```
 
-The pre-commit hooks include:
-- `cargo fmt` - Format code on commit
-- `cargo clippy` - Lint code on commit
-- `cargo test` - Run tests on push
+The pre-commit hooks run the **same checks as CI**:
+- **On every commit:**
+  - `cargo fmt --check` - Validate code formatting (fails if not formatted)
+  - `cargo clippy --all-features -- -D warnings` - Lint with zero warnings
+  - Conventional commit message validation
+- **On push:**
+  - `cargo test --all-features` - Run all tests
+
+To manually run all checks: `pre-commit run --all-files`
 
 ### Project structure
 

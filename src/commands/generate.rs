@@ -22,17 +22,17 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
 
     // Get diff from jj
     let revision = args.revision.as_deref();
-    
+
     // Try to get the diff, but handle empty diffs specially for merge commits
     let diff_result = jj::get_diff(revision).await;
-    
+
     let description = match diff_result {
         Ok(diff) => {
             info!("Retrieved diff ({} bytes)", diff.len());
-            
+
             // Generate description using LLM
             let client = llm::create_client(config).context("Failed to create LLM client")?;
-            
+
             client
                 .generate_description(&diff)
                 .await
@@ -44,8 +44,7 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
                 info!("Empty diff detected, but this is a merge commit");
                 "Merge commit".to_string()
             } else {
-                return Err(error::JjDescError::EmptyDiff)
-                    .context("No changes found in diff");
+                return Err(error::JjDescError::EmptyDiff).context("No changes found in diff");
             }
         }
         Err(e) => return Err(e).context("Failed to get diff from jj"),

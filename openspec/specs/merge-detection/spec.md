@@ -53,4 +53,3 @@ When encountering an empty diff, the system SHALL check if the commit is a merge
 - **And**: If non-merge commit (1 parent), return `EmptyDiff` error
 
 ---
-
