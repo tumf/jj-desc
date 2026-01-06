@@ -1,0 +1,76 @@
+mod cli;
+mod config;
+mod error;
+mod jj;
+mod llm;
+mod prompt;
+
+use anyhow::{Context, Result};
+use clap::Parser;
+use cli::Args;
+use config::Config;
+use llm::OpenRouterClient;
+use tracing::{info, Level};
+use tracing_subscriber::FmtSubscriber;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Parse command line arguments
+    let args = Args::parse();
+
+    // Initialize logging
+    let log_level = if args.verbose {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
+
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(log_level)
+        .with_target(false)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)
+        .context("Failed to set tracing subscriber")?;
+
+    // Load configuration
+    let config = Config::from_env()
+        .context("Failed to load configuration")?
+        .with_model(args.model);
+
+    info!("Using model: {}", config.model);
+
+    // Get diff from jj
+    let revision = args.revision.as_deref();
+    let diff = jj::get_diff(revision)
+        .await
+        .context("Failed to get diff from jj")?;
+
+    info!("Retrieved diff ({} bytes)", diff.len());
+
+    // Generate description using LLM
+    let client = OpenRouterClient::new(config)
+        .context("Failed to create OpenRouter client")?;
+
+    let description = client
+        .generate_description(&diff)
+        .await
+        .context("Failed to generate description")?;
+
+    // Display or apply the description
+    if args.dry_run {
+        println!("\nGenerated description (not applied):");
+        println!("─────────────────────");
+        println!("{}", description);
+    } else {
+        jj::set_description(&description, revision)
+            .await
+            .context("Failed to set description")?;
+
+        println!("\nApplied description:");
+        println!("─────────────────────");
+        println!("{}", description);
+    }
+
+    Ok(())
+}
