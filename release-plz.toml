@@ -8,12 +8,16 @@ allow_dirty = false
 changelog_update = true
 # Create git tag for release
 git_tag_enable = true
-# Release to crates.io (set to false if not publishing)
-release_enable = false
 # Create GitHub release
 git_release_enable = true
 # Use conventional commits for changelog
 changelog_config = "cliff.toml"
+
+# Package-specific configuration
+[[package]]
+name = "jj-desc"
+# Don't publish to crates.io (GitHub releases only)
+publish = false
 
 # PR settings
 [workspace.pr]
