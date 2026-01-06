@@ -4,7 +4,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum JjDescError {
-    #[error("API key environment variable is not set. Please set the appropriate key: OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY")]
+    #[error(
+        "API key environment variable is not set. Please set the appropriate key: OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY"
+    )]
     MissingApiKey,
 
     #[error("Invalid provider: {0}. Valid providers are: openrouter, openai, anthropic, gemini")]
@@ -36,9 +38,10 @@ mod tests {
     #[test]
     fn test_error_display() {
         let err = JjDescError::MissingApiKey;
-        assert!(err
-            .to_string()
-            .contains("API key environment variable is not set"));
+        assert!(
+            err.to_string()
+                .contains("API key environment variable is not set")
+        );
 
         let err = JjDescError::EmptyDiff;
         assert_eq!(err.to_string(), "No changes found in diff");

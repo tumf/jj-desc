@@ -12,11 +12,11 @@ pub trait LlmClient: Send + Sync {
     async fn generate_description(&self, diff: &str) -> Result<String, JjDescError>;
 }
 
-mod openai_compat;
 mod anthropic;
+mod openai_compat;
 
-pub use openai_compat::OpenAICompatClient;
 pub use anthropic::AnthropicClient;
+pub use openai_compat::OpenAICompatClient;
 
 /// Create an LLM client based on the provider in the config
 pub fn create_client(config: Config) -> Result<Box<dyn LlmClient>, JjDescError> {
@@ -24,8 +24,6 @@ pub fn create_client(config: Config) -> Result<Box<dyn LlmClient>, JjDescError> 
         Provider::OpenRouter | Provider::OpenAI | Provider::Gemini => {
             Ok(Box::new(OpenAICompatClient::new(config)?))
         }
-        Provider::Anthropic => {
-            Ok(Box::new(AnthropicClient::new(config)?))
-        }
+        Provider::Anthropic => Ok(Box::new(AnthropicClient::new(config)?)),
     }
 }

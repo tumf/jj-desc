@@ -3,7 +3,7 @@
 use crate::config::Config;
 use crate::error::JjDescError;
 use crate::llm::LlmClient;
-use crate::prompt::{build_user_prompt, SYSTEM_PROMPT};
+use crate::prompt::{SYSTEM_PROMPT, build_user_prompt};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -61,7 +61,7 @@ impl LlmClient for OpenAICompatClient {
     #[instrument(skip(self, diff))]
     async fn generate_description(&self, diff: &str) -> Result<String, JjDescError> {
         let url = format!("{}/chat/completions", self.config.base_url);
-        
+
         let request = ChatCompletionRequest {
             model: self.config.model.clone(),
             messages: vec![
@@ -77,8 +77,8 @@ impl LlmClient for OpenAICompatClient {
         };
 
         debug!(
-            model = %self.config.model, 
-            url = %url, 
+            model = %self.config.model,
+            url = %url,
             provider = %self.config.provider,
             "Sending request to LLM API"
         );
@@ -100,7 +100,10 @@ impl LlmClient for OpenAICompatClient {
 
         if !response.status().is_success() {
             let status = response.status();
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             return Err(JjDescError::JjCommand(format!(
                 "API request failed with status {}: {}",
                 status, error_text
@@ -118,7 +121,10 @@ impl LlmClient for OpenAICompatClient {
             .trim()
             .to_string();
 
-        debug!(desc_len = description.len(), "Description generated successfully");
+        debug!(
+            desc_len = description.len(),
+            "Description generated successfully"
+        );
 
         Ok(description)
     }

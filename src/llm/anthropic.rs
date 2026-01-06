@@ -3,7 +3,7 @@
 use crate::config::Config;
 use crate::error::JjDescError;
 use crate::llm::LlmClient;
-use crate::prompt::{build_user_prompt, SYSTEM_PROMPT};
+use crate::prompt::{SYSTEM_PROMPT, build_user_prompt};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -68,7 +68,7 @@ impl LlmClient for AnthropicClient {
     #[instrument(skip(self, diff))]
     async fn generate_description(&self, diff: &str) -> Result<String, JjDescError> {
         let url = format!("{}/v1/messages", self.config.base_url);
-        
+
         let request = AnthropicRequest {
             model: self.config.model.clone(),
             max_tokens: 1024,
@@ -80,7 +80,7 @@ impl LlmClient for AnthropicClient {
         };
 
         debug!(
-            model = %self.config.model, 
+            model = %self.config.model,
             url = %url,
             "Sending request to Anthropic API"
         );
@@ -97,7 +97,10 @@ impl LlmClient for AnthropicClient {
 
         if !response.status().is_success() {
             let status = response.status();
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             return Err(JjDescError::JjCommand(format!(
                 "API request failed with status {}: {}",
                 status, error_text
@@ -114,7 +117,10 @@ impl LlmClient for AnthropicClient {
             .trim()
             .to_string();
 
-        debug!(desc_len = description.len(), "Description generated successfully");
+        debug!(
+            desc_len = description.len(),
+            "Description generated successfully"
+        );
 
         Ok(description)
     }

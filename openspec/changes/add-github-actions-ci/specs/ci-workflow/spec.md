@@ -1,62 +1,62 @@
-# CI Workflow Specification
+# CI ワークフロー仕様
 
 ## ADDED Requirements
 
-### Requirement: Automated Unit Test Execution
+### Requirement: 自動ユニットテスト実行
 
-The CI system SHALL automatically execute all unit tests when code changes are proposed or merged.
+CI システム SHALL コード変更が提案またはマージされた際に、すべてのユニットテストを自動的に実行する。
 
-#### Scenario: Pull Request Triggers Test Execution
+#### Scenario: プルリクエストでテスト実行をトリガー
 
-**Given** a developer creates a pull request targeting the main branch
-**When** the pull request is opened or updated
-**Then** the CI workflow executes `cargo test --all-features`
-**And** the test results are reported on the pull request
+**Given** 開発者が main ブランチをターゲットとしたプルリクエストを作成する
+**When** プルリクエストが開かれるか更新される
+**Then** CI ワークフローが `cargo test --all-features` を実行する
+**And** テスト結果がプルリクエストに報告される
 
-#### Scenario: Main Branch Push Triggers Test Execution
+#### Scenario: main ブランチへのプッシュでテスト実行をトリガー
 
-**Given** a commit is merged to the main branch
-**When** the push event occurs
-**Then** the CI workflow executes all unit tests
-**And** the results are visible in the repository's Actions tab
+**Given** コミットが main ブランチにマージされる
+**When** プッシュイベントが発生する
+**Then** CI ワークフローがすべてのユニットテストを実行する
+**And** 結果がリポジトリの Actions タブで確認できる
 
-### Requirement: Multi-Version Rust Testing
+### Requirement: 複数 Rust バージョンでのテスト
 
-The CI system SHALL test against both the minimum supported Rust version (MSRV) and the latest stable version.
+CI システム SHALL 最小サポート Rust バージョン（MSRV）と最新安定版の両方でテストを実行する。
 
-#### Scenario: MSRV Compatibility Check
+#### Scenario: MSRV 互換性チェック
 
-**Given** the project specifies rust-version = "1.85" in Cargo.toml
-**When** the CI workflow runs
-**Then** tests execute on Rust 1.85
-**And** tests execute on Rust stable
-**And** both versions must pass for the workflow to succeed
+**Given** プロジェクトが Cargo.toml で rust-version = "1.85" を指定している
+**When** CI ワークフローが実行される
+**Then** Rust 1.85 でテストが実行される
+**And** Rust stable でテストが実行される
+**And** ワークフローが成功するには両バージョンで合格する必要がある
 
-### Requirement: Code Quality Checks
+### Requirement: コード品質チェック
 
-The CI system SHALL enforce code quality through automated linting and formatting checks.
+CI システム SHALL 自動リントおよびフォーマットチェックによりコード品質を強制する。
 
-#### Scenario: Clippy Lint Check
+#### Scenario: Clippy リントチェック
 
-**Given** the CI workflow runs
-**When** the lint job executes
-**Then** `cargo clippy -- -D warnings` runs
-**And** any clippy warnings cause the job to fail
+**Given** CI ワークフローが実行される
+**When** リントジョブが実行される
+**Then** `cargo clippy -- -D warnings` が実行される
+**And** clippy の警告があればジョブが失敗する
 
-#### Scenario: Format Check
+#### Scenario: フォーマットチェック
 
-**Given** the CI workflow runs
-**When** the format job executes
-**Then** `cargo fmt --check` runs
-**And** any formatting issues cause the job to fail
+**Given** CI ワークフローが実行される
+**When** フォーマットジョブが実行される
+**Then** `cargo fmt --check` が実行される
+**And** フォーマットの問題があればジョブが失敗する
 
-### Requirement: Build Caching
+### Requirement: ビルドキャッシュ
 
-The CI system SHALL cache build artifacts to reduce workflow execution time.
+CI システム SHALL ワークフロー実行時間を短縮するためにビルド成果物をキャッシュする。
 
-#### Scenario: Cached Build
+#### Scenario: キャッシュされたビルド
 
-**Given** a previous CI run has completed
-**When** a new CI run starts with unchanged dependencies
-**Then** cached Cargo registry and build artifacts are restored
-**And** the build time is significantly reduced compared to a cold build
+**Given** 以前の CI 実行が完了している
+**When** 依存関係が変更されていない状態で新しい CI 実行が開始される
+**Then** キャッシュされた Cargo レジストリとビルド成果物が復元される
+**And** コールドビルドと比較してビルド時間が大幅に短縮される

@@ -35,10 +35,7 @@ pub async fn get_diff(revision: Option<&str>) -> Result<String, JjDescError> {
 
 /// Set the description for the specified revision (or current working copy if None)
 #[instrument(skip(description))]
-pub async fn set_description(
-    description: &str,
-    revision: Option<&str>,
-) -> Result<(), JjDescError> {
+pub async fn set_description(description: &str, revision: Option<&str>) -> Result<(), JjDescError> {
     let mut cmd = Command::new("jj");
     cmd.arg("desc").arg("-m").arg(description);
 

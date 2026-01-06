@@ -10,7 +10,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use cli::Args;
 use config::Config;
-use tracing::{info, Level};
+use tracing::{Level, info};
 use tracing_subscriber::FmtSubscriber;
 
 #[tokio::main]
@@ -53,8 +53,7 @@ async fn main() -> Result<()> {
     info!("Retrieved diff ({} bytes)", diff.len());
 
     // Generate description using LLM
-    let client = llm::create_client(config)
-        .context("Failed to create LLM client")?;
+    let client = llm::create_client(config).context("Failed to create LLM client")?;
 
     let description = client
         .generate_description(&diff)
