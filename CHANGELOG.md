@@ -2,7 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.3.0] - 2026-01-06
+## [0.4.0] - 2026-01-07
+
+### Documentation
+
+- Docs: update to emphasize Conventional Commits format
+- Docs: archive completed refactor-config-resolution change
+
+### Features
+
+- Feat(diff): add diff filtering with exclusion patterns and size tracking
+- Feat: add diff filtering to optimize large diff handling
+
+Implement automatic exclusion of lock files, binary file simplification,
+and customizable --exclude option to reduce token usage and improve
+LLM processing efficiency. Add size warnings for diffs exceeding 50KB.
+- Add design documentation for large diff optimization
+
+Introduce comprehensive planning docs for implementing diff filtering
+and size optimization features inspired by aicommit2, including lock
+file exclusion, binary file summarization, and user-configurable
+exclude patterns to reduce LLM token consumption and API errors.
+- Add design documentation for CLI subcommand unification
+
+Document the proposal to merge generate and backfill subcommands into a
+unified interface without subcommands, including design decisions,
+implementation tasks, and updated specifications.
+
+### Refactoring
+
+- Refactor release documentation and add automated release script
+
+## [0.3.0] - 2026-01-07
 
 ### Bug Fixes
 
@@ -42,6 +73,7 @@ maintainability and user experience.
 
 ### Miscellaneous Tasks
 
+- Chore: release v0.3.0
 - Chore: migrate from release-plz to cargo-release for better jj compatibility
 
 ### Refactoring
