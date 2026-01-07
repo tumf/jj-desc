@@ -12,7 +12,7 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 - 🔍 Preview mode with `--dry-run`
 - 💬 Interactive mode for reviewing each description before applying
 - 🎚️ Flexible targeting with jj revset syntax
-- 📝 Follows git commit message best practices
+- 📝 Follows [Conventional Commits](https://www.conventionalcommits.org/) format
 - 🔀 Handles merge commits automatically (no LLM call needed for empty merge commits)
 
 ## Installation
@@ -351,7 +351,7 @@ jj-desc
 # Output:
 # Applied description:
 # ─────────────────────
-# Add hello function to lib.rs
+# feat: add hello function
 ```
 
 ### Example 2: Preview before applying
@@ -362,7 +362,7 @@ jj-desc --dry-run
 # Output:
 # Generated description (not applied):
 # ─────────────────────
-# Add user authentication with JWT tokens
+# feat(auth): add JWT authentication
 ```
 
 ### Example 3: Backfill multiple commits
@@ -378,19 +378,19 @@ jj-desc backfill
 # Processing: 1/3 (33%)
 # Commit: abc123def456
 # Generated description:
-#   Add user authentication endpoint
+#   feat(auth): add authentication endpoint
 # ✓ Description applied
 #
 # Processing: 2/3 (66%)
 # Commit: def456ghi789
 # Generated description:
-#   Fix validation bug in login form
+#   fix(auth): fix validation bug in login form
 # ✓ Description applied
 #
 # Processing: 3/3 (100%)
 # Commit: ghi789jkl012
 # Generated description:
-#   Update dependencies
+#   chore(deps): update dependencies
 # ✓ Description applied
 #
 # ═══════════════════════
@@ -410,11 +410,11 @@ jj-desc backfill --interactive --revisions "mine()"
 # Processing: 1/5 (20%)
 # Commit: abc123
 # Generated description:
-#   Add user authentication
+#   feat(auth): add user authentication
 #
 # Full description:
 # ─────────────────────
-# Add user authentication with JWT tokens
+# feat(auth): add JWT authentication
 #
 # Implements login and logout endpoints with secure
 # token generation and validation.
