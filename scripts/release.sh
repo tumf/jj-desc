@@ -31,6 +31,29 @@ if [[ ! "$RELEASE_TYPE" =~ ^(patch|minor|major)$ ]]; then
 	exit 1
 fi
 
+# Check if we're on main branch
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [ -z "$CURRENT_BRANCH" ]; then
+	echo -e "${RED}Error: Not on a branch (detached HEAD state)${NC}"
+	echo "Please checkout main branch first:"
+	echo "  git checkout main"
+	exit 1
+fi
+
+if [ "$CURRENT_BRANCH" != "main" ]; then
+	echo -e "${RED}Error: Not on main branch (currently on '$CURRENT_BRANCH')${NC}"
+	echo "Please checkout main branch first:"
+	echo "  git checkout main"
+	exit 1
+fi
+
+# Check for uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+	echo -e "${RED}Error: You have uncommitted changes${NC}"
+	echo "Please commit or stash your changes first"
+	exit 1
+fi
+
 # Check for required tools
 command -v git-cliff >/dev/null 2>&1 || {
 	echo -e "${RED}Error: git-cliff is not installed${NC}"
