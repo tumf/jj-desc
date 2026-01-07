@@ -132,8 +132,7 @@ mod tests {
 
     #[test]
     fn test_backfill_revisions_short_option() {
-        let args =
-            Args::try_parse_from(&["jj-desc", "backfill", "-r", "mutable()"]).unwrap();
+        let args = Args::try_parse_from(&["jj-desc", "backfill", "-r", "mutable()"]).unwrap();
         if let Some(Command::Backfill(backfill_args)) = args.command {
             assert_eq!(backfill_args.revisions, "mutable()");
         } else {
@@ -163,8 +162,7 @@ mod tests {
 
     #[test]
     fn test_backfill_interactive_option() {
-        let args =
-            Args::try_parse_from(&["jj-desc", "backfill", "--interactive"]).unwrap();
+        let args = Args::try_parse_from(&["jj-desc", "backfill", "--interactive"]).unwrap();
         if let Some(Command::Backfill(backfill_args)) = args.command {
             assert!(backfill_args.interactive);
         } else {
@@ -194,13 +192,8 @@ mod tests {
 
     #[test]
     fn test_backfill_provider_option() {
-        let args = Args::try_parse_from(&[
-            "jj-desc",
-            "backfill",
-            "--provider",
-            "anthropic",
-        ])
-        .unwrap();
+        let args =
+            Args::try_parse_from(&["jj-desc", "backfill", "--provider", "anthropic"]).unwrap();
         if let Some(Command::Backfill(backfill_args)) = args.command {
             assert_eq!(backfill_args.provider, Some(Provider::Anthropic));
         } else {
@@ -262,8 +255,7 @@ mod tests {
 
     #[test]
     fn test_invalid_provider() {
-        let result =
-            Args::try_parse_from(&["jj-desc", "backfill", "--provider", "invalid"]);
+        let result = Args::try_parse_from(&["jj-desc", "backfill", "--provider", "invalid"]);
         assert!(result.is_err());
     }
 
@@ -279,15 +271,8 @@ mod tests {
 
     #[test]
     fn test_generate_exclude_option() {
-        let args = Args::try_parse_from(&[
-            "jj-desc",
-            "generate",
-            "-x",
-            "*.lock",
-            "-x",
-            "*.json",
-        ])
-        .unwrap();
+        let args =
+            Args::try_parse_from(&["jj-desc", "generate", "-x", "*.lock", "-x", "*.json"]).unwrap();
         if let Some(Command::Generate(generate_args)) = args.command {
             assert_eq!(generate_args.exclude, vec!["*.lock", "*.json"]);
         } else {

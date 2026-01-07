@@ -85,7 +85,7 @@ pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
             DiffResult::Content(diff) => {
                 // Filter diff to remove lock files and simplify binary files
                 let filtered = diff_filter::filter_diff(&diff, &args.exclude);
-                
+
                 info!(
                     "Filtered diff for {}: {} -> {} bytes ({:.1}% reduction)",
                     commit.change_id,
@@ -105,7 +105,7 @@ pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
                         continue;
                     }
                 }
-            },
+            }
             DiffResult::EmptyMerge => {
                 // For empty merge commits, use a default description
                 EMPTY_MERGE_DESCRIPTION.to_string()

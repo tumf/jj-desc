@@ -37,7 +37,7 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
 
             // Filter diff to remove lock files and simplify binary files
             let filtered = diff_filter::filter_diff(&diff, &args.exclude);
-            
+
             info!(
                 "Filtered diff: {} -> {} bytes ({:.1}% reduction)",
                 filtered.original_size,
