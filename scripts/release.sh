@@ -135,10 +135,9 @@ cargo check --quiet
 echo -e "${YELLOW}Generating CHANGELOG...${NC}"
 git cliff -o CHANGELOG.md --tag "v${NEW_VERSION}"
 
-# Ensure CHANGELOG.md ends with a newline (for pre-commit hooks)
-if [ -n "$(tail -c 1 CHANGELOG.md)" ]; then
-	echo "" >>CHANGELOG.md
-fi
+# Ensure CHANGELOG.md ends with exactly one newline (for pre-commit hooks)
+# git cliff outputs multiple trailing newlines, remove extras
+sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' CHANGELOG.md && rm -f CHANGELOG.md.bak
 
 # Show changes
 echo ""
