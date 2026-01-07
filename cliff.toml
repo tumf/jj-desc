@@ -21,7 +21,7 @@ body = """
             {% if commit.breaking %}[**BREAKING**] {% endif %}\
             {{ commit.message | upper_first }}\
     {% endfor %}
-{% endfor %}\n
+{% endfor %}
 """
 footer = ""
 trim = true

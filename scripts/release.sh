@@ -115,7 +115,7 @@ cargo clippy --all-features -- -D warnings || {
 }
 
 echo "  → cargo test"
-cargo test --all-features || {
+cargo test --all-features -- --test-threads=1 || {
 	echo -e "${RED}Error: Tests failed${NC}"
 	exit 1
 }
