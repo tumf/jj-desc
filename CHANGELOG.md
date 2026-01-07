@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2026-01-07
+
+### Bug Fixes
+
+- Fix: apply pre-commit formatting fixes (trailing whitespace, EOF)
+
+### Documentation
+
+- Docs: add proposal to skip empty non-merge commits
+- Docs: add CONTRIBUTING.md and refactor README development section
+- Docs(specs): update purpose sections and refine requirements
+
+### Features
+
+- Feat: skip empty non-merge commits instead of setting placeholder
+- Feat(cli): add force regeneration mode for explicit revset usage
+- Feat(release): add branch and uncommitted changes validation
+
+### Refactoring
+
+- Refactor(cli): simplify CLI structure by removing subcommands
+
 ## [0.4.0] - 2026-01-07
 
 ### Documentation
@@ -28,6 +50,10 @@ exclude patterns to reduce LLM token consumption and API errors.
 Document the proposal to merge generate and backfill subcommands into a
 unified interface without subcommands, including design decisions,
 implementation tasks, and updated specifications.
+
+### Miscellaneous Tasks
+
+- Chore: release v0.4.0
 
 ### Refactoring
 

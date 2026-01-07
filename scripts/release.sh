@@ -135,6 +135,11 @@ cargo check --quiet
 echo -e "${YELLOW}Generating CHANGELOG...${NC}"
 git cliff -o CHANGELOG.md --tag "v${NEW_VERSION}"
 
+# Ensure CHANGELOG.md ends with a newline (for pre-commit hooks)
+if [ -n "$(tail -c 1 CHANGELOG.md)" ]; then
+	echo "" >>CHANGELOG.md
+fi
+
 # Show changes
 echo ""
 echo -e "${YELLOW}Changes to be committed:${NC}"
