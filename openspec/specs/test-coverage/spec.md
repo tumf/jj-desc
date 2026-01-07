@@ -1,10 +1,11 @@
-# Test Coverage Specification
+# test-coverage Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change add-unit-tests-for-low-coverage. Update Purpose after archive.
+## Requirements
 ### Requirement: CLI Argument Parsing Tests
 
-The CLI argument parser (`src/cli.rs`) shall have unit tests covering all subcommands, global options, and validation logic.
+The CLI argument parser (`src/cli.rs`) SHALL have unit tests covering all subcommands, global options, and validation logic.
 
 #### Scenario: Parse generate subcommand
 
@@ -43,7 +44,7 @@ The CLI argument parser (`src/cli.rs`) shall have unit tests covering all subcom
 
 ### Requirement: LLM Client Factory Tests
 
-The LLM client factory (`src/llm/mod.rs`) shall have unit tests verifying correct client instantiation for each provider.
+The LLM client factory (`src/llm/mod.rs`) SHALL have unit tests verifying correct client instantiation for each provider.
 
 #### Scenario: Create Anthropic client
 
@@ -77,7 +78,7 @@ The LLM client factory (`src/llm/mod.rs`) shall have unit tests verifying correc
 
 ### Requirement: Anthropic Client Initialization Tests
 
-The Anthropic client (`src/llm/anthropic.rs`) shall have unit tests verifying proper initialization with various configurations.
+The Anthropic client (`src/llm/anthropic.rs`) SHALL have unit tests verifying proper initialization with various configurations.
 
 #### Scenario: Initialize with default model
 
@@ -104,7 +105,7 @@ The Anthropic client (`src/llm/anthropic.rs`) shall have unit tests verifying pr
 
 ### Requirement: OpenAI-Compatible Client Initialization Tests
 
-The OpenAI-compatible client (`src/llm/openai_compat.rs`) shall have unit tests verifying proper initialization with various configurations.
+The OpenAI-compatible client (`src/llm/openai_compat.rs`) SHALL have unit tests verifying proper initialization with various configurations.
 
 #### Scenario: Initialize with default model
 
@@ -131,7 +132,7 @@ The OpenAI-compatible client (`src/llm/openai_compat.rs`) shall have unit tests 
 
 ### Requirement: Overall Test Coverage Improvement
 
-The overall test coverage shall be increased from 53.66% to at least 60%.
+The overall test coverage SHALL be increased from 53.66% to at least 60%.
 
 #### Scenario: Measure coverage after tests
 
@@ -145,12 +146,3 @@ The overall test coverage shall be increased from 53.66% to at least 60%.
 
 ---
 
-## MODIFIED Requirements
-
-None.
-
----
-
-## REMOVED Requirements
-
-None.

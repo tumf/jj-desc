@@ -12,8 +12,10 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 - 🔍 Preview mode with `--dry-run`
 - 💬 Interactive mode for reviewing each description before applying
 - 🎚️ Flexible targeting with jj revset syntax
-- 📝 Follows git commit message best practices
+- 📝 Follows [Conventional Commits](https://www.conventionalcommits.org/) format
 - 🔀 Handles merge commits automatically (no LLM call needed for empty merge commits)
+- ⚡ Optimized for large diffs: automatically excludes lock files and simplifies binary files
+- 🎛️ Customizable file exclusions with `--exclude` option
 
 ## Installation
 
@@ -283,23 +285,86 @@ Or use the `RUST_LOG` environment variable:
 RUST_LOG=debug jj-desc
 ```
 
+### Exclude files from diff
+
+Exclude specific files or patterns from the diff sent to the LLM:
+
+```bash
+# Exclude specific files
+jj-desc --exclude "*.json" --exclude "*.yaml"
+
+# Works with both generate and backfill
+jj-desc generate -x "docs/*" -x "*.lock"
+jj-desc backfill --exclude "vendor/*"
+```
+
+**Automatically excluded files:**
+- Lock files: `Cargo.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `*.lock`, `*.lockb`
+- Binary files are automatically simplified to `"Binary file {path} changed"`
+
+**Why exclude files?**
+- Reduces token usage and costs
+- Prevents API errors from exceeding context limits
+- Improves description quality by focusing on meaningful changes
+
+**Large diff warning:**
+If your diff exceeds 50KB after filtering, you'll see a warning:
+```
+⚠ Warning: Diff is large (75000 bytes, 3500 lines)
+  Consider splitting into smaller commits.
+```
+
 ### Command-line options
 
+#### Main command
+
 ```
-Usage: jj-desc [OPTIONS]
+Usage: jj-desc [OPTIONS] [COMMAND]
+
+Commands:
+  generate  Generate description for a single commit
+  backfill  Backfill descriptions for multiple commits (default)
 
 Options:
-  -v, --verbose                  Enable verbose logging
-      --dry-run                  Preview the generated descriptions without applying them
-      --provider <PROVIDER>      LLM provider to use [env: LLM_PROVIDER]
-      --model <MODEL>            Override the LLM model to use [env: LLM_MODEL]
-      --max-tokens <MAX_TOKENS>  Maximum tokens for LLM response [env: LLM_MAX_TOKENS]
-      --temperature <TEMPERATURE> Temperature for LLM response (0.0-2.0) [env: LLM_TEMPERATURE]
-  -r, --revisions <REVISIONS>    Revset to select target commits [default: "::@ & mutable()"]
-  -n, --limit <LIMIT>            Maximum number of commits to process
-  -i, --interactive              Ask for confirmation before applying each description
-  -h, --help                     Print help
-  -V, --version                  Print version
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+#### Generate subcommand
+
+```
+Usage: jj-desc generate [OPTIONS]
+
+Options:
+      --dry-run                    Preview the generated description without applying it
+      --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
+      --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
+      --max-tokens <MAX_TOKENS>    Maximum tokens for LLM response [env: LLM_MAX_TOKENS]
+      --temperature <TEMPERATURE>  Temperature for LLM response (0.0-2.0) [env: LLM_TEMPERATURE]
+  -r, --revision <REVISION>        Target revision (defaults to current working copy)
+  -x, --exclude <EXCLUDE>          Files to exclude from diff (can be specified multiple times)
+  -v, --verbose                    Enable verbose logging
+  -h, --help                       Print help
+```
+
+#### Backfill subcommand
+
+```
+Usage: jj-desc backfill [OPTIONS]
+
+Options:
+      --dry-run                    Preview the generated descriptions without applying them
+      --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
+      --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
+      --max-tokens <MAX_TOKENS>    Maximum tokens for LLM response [env: LLM_MAX_TOKENS]
+      --temperature <TEMPERATURE>  Temperature for LLM response (0.0-2.0) [env: LLM_TEMPERATURE]
+  -r, --revisions <REVISIONS>      Revset to select target commits [default: "::@ & mutable()"]
+  -n, --limit <LIMIT>              Maximum number of commits to process
+  -i, --interactive                Ask for confirmation before applying each description
+  -x, --exclude <EXCLUDE>          Files to exclude from diff (can be specified multiple times)
+  -v, --verbose                    Enable verbose logging
+  -h, --help                       Print help
 ```
 
 ## Examples
@@ -316,7 +381,7 @@ jj-desc
 # Output:
 # Applied description:
 # ─────────────────────
-# Add hello function to lib.rs
+# feat: add hello function
 ```
 
 ### Example 2: Preview before applying
@@ -327,7 +392,7 @@ jj-desc --dry-run
 # Output:
 # Generated description (not applied):
 # ─────────────────────
-# Add user authentication with JWT tokens
+# feat(auth): add JWT authentication
 ```
 
 ### Example 3: Process multiple commits
@@ -343,19 +408,19 @@ jj-desc
 # Processing: 1/3 (33%)
 # Commit: abc123def456
 # Generated description:
-#   Add user authentication endpoint
+#   feat(auth): add authentication endpoint
 # ✓ Description applied
 #
 # Processing: 2/3 (66%)
 # Commit: def456ghi789
 # Generated description:
-#   Fix validation bug in login form
+#   fix(auth): fix validation bug in login form
 # ✓ Description applied
 #
 # Processing: 3/3 (100%)
 # Commit: ghi789jkl012
 # Generated description:
-#   Update dependencies
+#   chore(deps): update dependencies
 # ✓ Description applied
 #
 # ═══════════════════════
@@ -375,11 +440,11 @@ jj-desc --interactive -r "mine()"
 # Processing: 1/5 (20%)
 # Commit: abc123
 # Generated description:
-#   Add user authentication
+#   feat(auth): add user authentication
 #
 # Full description:
 # ─────────────────────
-# Add user authentication with JWT tokens
+# feat(auth): add JWT authentication
 #
 # Implements login and logout endpoints with secure
 # token generation and validation.
@@ -391,12 +456,17 @@ jj-desc --interactive -r "mine()"
 ## How it works
 
 1. Runs `jj diff` to get the current changes
-2. If the diff is empty:
+2. **Filters the diff** to optimize for LLM processing:
+   - Automatically excludes lock files (`Cargo.lock`, `package-lock.json`, etc.)
+   - Simplifies binary files to `"Binary file {path} changed"`
+   - Applies user-specified exclusions via `--exclude`
+   - Warns if diff exceeds 50KB
+3. If the filtered diff is empty:
    - Checks if it's a merge commit (using `jj log -T 'parents.len()'`)
    - If yes, sets description to "Merge commit" without calling LLM
    - If no, returns an error
-3. If the diff is not empty, sends it to your chosen LLM provider API with a specialized prompt
-4. Applies the generated description using `jj desc -m`
+4. If the diff is not empty, sends it to your chosen LLM provider API with a specialized prompt
+5. Applies the generated description using `jj desc -m`
 
 ### Merge Commit Handling
 
@@ -473,6 +543,7 @@ src/
 ├── commands/       # Command implementation
 │   └── mod.rs          # Unified command execution
 ├── config.rs       # Configuration management
+├── diff_filter.rs  # Diff filtering and optimization
 ├── provider.rs     # Provider enumeration
 ├── error.rs        # Error type definitions
 ├── jj.rs           # jj command integration
