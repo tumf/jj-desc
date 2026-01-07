@@ -1,7 +1,7 @@
 // CLI argument definitions
 
 use crate::provider::Provider;
-use clap::{Parser, Subcommand};
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -11,52 +11,10 @@ use clap::{Parser, Subcommand};
     long_about = None
 )]
 pub struct Args {
-    #[command(subcommand)]
-    pub command: Option<Command>,
-
     /// Enable verbose logging
-    #[arg(short, long, global = true)]
-    pub verbose: bool,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum Command {
-    /// Generate description for a single commit
-    Generate(GenerateArgs),
-
-    /// Backfill descriptions for multiple commits (default)
-    Backfill(BackfillArgs),
-}
-
-#[derive(Parser, Debug)]
-pub struct GenerateArgs {
-    /// Preview the generated description without applying it
-    #[arg(long)]
-    pub dry_run: bool,
-
-    /// LLM provider to use (openrouter, openai, anthropic, gemini)
-    #[arg(long, env = "LLM_PROVIDER")]
-    pub provider: Option<Provider>,
-
-    /// Override the LLM model to use
-    #[arg(long, env = "LLM_MODEL")]
-    pub model: Option<String>,
-
-    /// Maximum tokens for LLM response
-    #[arg(long, env = "LLM_MAX_TOKENS")]
-    pub max_tokens: Option<u32>,
-
-    /// Temperature for LLM response (0.0-2.0)
-    #[arg(long, env = "LLM_TEMPERATURE")]
-    pub temperature: Option<f32>,
-
-    /// Target revision (defaults to current working copy)
     #[arg(short, long)]
-    pub revision: Option<String>,
-}
+    pub verbose: bool,
 
-#[derive(Parser, Debug)]
-pub struct BackfillArgs {
     /// Preview the generated descriptions without applying them
     #[arg(long)]
     pub dry_run: bool,
@@ -95,117 +53,93 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_generate_subcommand() {
-        let args = Args::try_parse_from(&["jj-desc", "generate"]).unwrap();
-        assert!(matches!(args.command, Some(Command::Generate(_))));
+    fn test_default_revisions() {
+        let args = Args::try_parse_from(&["jj-desc"]).unwrap();
+        assert_eq!(args.revisions, "::@ & mutable()");
     }
 
     #[test]
-    fn test_generate_with_revision() {
-        let args = Args::try_parse_from(&["jj-desc", "generate", "--revision", "@"]).unwrap();
-        if let Some(Command::Generate(generate_args)) = args.command {
-            assert_eq!(generate_args.revision, Some("@".to_string()));
-        } else {
-            panic!("Expected Generate command");
-        }
+    fn test_revisions_option() {
+        let args = Args::try_parse_from(&["jj-desc", "--revisions", "@"]).unwrap();
+        assert_eq!(args.revisions, "@");
     }
 
     #[test]
-    fn test_generate_with_provider() {
+    fn test_revisions_short_option() {
+        let args = Args::try_parse_from(&["jj-desc", "-r", "mutable()"]).unwrap();
+        assert_eq!(args.revisions, "mutable()");
+    }
+
+    #[test]
+    fn test_limit_option() {
+        let args = Args::try_parse_from(&["jj-desc", "--limit", "10"]).unwrap();
+        assert_eq!(args.limit, Some(10));
+    }
+
+    #[test]
+    fn test_limit_short_option() {
+        let args = Args::try_parse_from(&["jj-desc", "-n", "5"]).unwrap();
+        assert_eq!(args.limit, Some(5));
+    }
+
+    #[test]
+    fn test_interactive_option() {
+        let args = Args::try_parse_from(&["jj-desc", "--interactive"]).unwrap();
+        assert!(args.interactive);
+    }
+
+    #[test]
+    fn test_interactive_short_option() {
+        let args = Args::try_parse_from(&["jj-desc", "-i"]).unwrap();
+        assert!(args.interactive);
+    }
+
+    #[test]
+    fn test_dry_run_option() {
+        let args = Args::try_parse_from(&["jj-desc", "--dry-run"]).unwrap();
+        assert!(args.dry_run);
+    }
+
+    #[test]
+    fn test_provider_option() {
+        let args = Args::try_parse_from(&["jj-desc", "--provider", "anthropic"]).unwrap();
+        assert_eq!(args.provider, Some(Provider::Anthropic));
+    }
+
+    #[test]
+    fn test_model_option() {
         let args =
-            Args::try_parse_from(&["jj-desc", "generate", "--provider", "anthropic"]).unwrap();
-        if let Some(Command::Generate(generate_args)) = args.command {
-            assert_eq!(generate_args.provider, Some(Provider::Anthropic));
-        } else {
-            panic!("Expected Generate command");
-        }
-    }
-
-    #[test]
-    fn test_generate_with_model() {
-        let args = Args::try_parse_from(&[
-            "jj-desc",
-            "generate",
-            "--model",
-            "claude-3-5-sonnet-20241022",
-        ])
-        .unwrap();
-        if let Some(Command::Generate(generate_args)) = args.command {
-            assert_eq!(
-                generate_args.model,
-                Some("claude-3-5-sonnet-20241022".to_string())
-            );
-        } else {
-            panic!("Expected Generate command");
-        }
-    }
-
-    #[test]
-    fn test_generate_with_dry_run() {
-        let args = Args::try_parse_from(&["jj-desc", "generate", "--dry-run"]).unwrap();
-        if let Some(Command::Generate(generate_args)) = args.command {
-            assert!(generate_args.dry_run);
-        } else {
-            panic!("Expected Generate command");
-        }
-    }
-
-    #[test]
-    fn test_backfill_subcommand() {
-        let args = Args::try_parse_from(&["jj-desc", "backfill"]).unwrap();
-        assert!(matches!(args.command, Some(Command::Backfill(_))));
-    }
-
-    #[test]
-    fn test_backfill_with_revisions() {
-        let args =
-            Args::try_parse_from(&["jj-desc", "backfill", "--revisions", "mutable()"]).unwrap();
-        if let Some(Command::Backfill(backfill)) = args.command {
-            assert_eq!(backfill.revisions, "mutable()");
-        } else {
-            panic!("Expected Backfill command");
-        }
-    }
-
-    #[test]
-    fn test_backfill_with_dry_run() {
-        let args = Args::try_parse_from(&["jj-desc", "backfill", "--dry-run"]).unwrap();
-        if let Some(Command::Backfill(backfill)) = args.command {
-            assert!(backfill.dry_run);
-        } else {
-            panic!("Expected Backfill command");
-        }
-    }
-
-    #[test]
-    fn test_backfill_with_interactive() {
-        let args = Args::try_parse_from(&["jj-desc", "backfill", "--interactive"]).unwrap();
-        if let Some(Command::Backfill(backfill)) = args.command {
-            assert!(backfill.interactive);
-        } else {
-            panic!("Expected Backfill command");
-        }
-    }
-
-    #[test]
-    fn test_backfill_with_limit() {
-        let args = Args::try_parse_from(&["jj-desc", "backfill", "--limit", "10"]).unwrap();
-        if let Some(Command::Backfill(backfill)) = args.command {
-            assert_eq!(backfill.limit, Some(10));
-        } else {
-            panic!("Expected Backfill command");
-        }
+            Args::try_parse_from(&["jj-desc", "--model", "claude-3-5-sonnet-20241022"]).unwrap();
+        assert_eq!(args.model, Some("claude-3-5-sonnet-20241022".to_string()));
     }
 
     #[test]
     fn test_verbose_flag() {
-        let args = Args::try_parse_from(&["jj-desc", "--verbose", "generate"]).unwrap();
+        let args = Args::try_parse_from(&["jj-desc", "--verbose"]).unwrap();
         assert!(args.verbose);
     }
 
     #[test]
+    fn test_combined_options() {
+        let args = Args::try_parse_from(&[
+            "jj-desc",
+            "-r",
+            "@",
+            "-n",
+            "1",
+            "--dry-run",
+            "--interactive",
+        ])
+        .unwrap();
+        assert_eq!(args.revisions, "@");
+        assert_eq!(args.limit, Some(1));
+        assert!(args.dry_run);
+        assert!(args.interactive);
+    }
+
+    #[test]
     fn test_invalid_provider() {
-        let result = Args::try_parse_from(&["jj-desc", "generate", "--provider", "invalid"]);
+        let result = Args::try_parse_from(&["jj-desc", "--provider", "invalid"]);
         assert!(result.is_err());
     }
 }

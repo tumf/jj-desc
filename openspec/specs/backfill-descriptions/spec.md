@@ -5,21 +5,21 @@ TBD - created by archiving change backfill-empty-descriptions. Update Purpose af
 ## Requirements
 ### Requirement: Batch description generation for multiple commits
 
-The `jj-desc backfill` command SHALL generate and set descriptions for commits with empty descriptions within a specified revset using LLM.
+The `jj-desc` command SHALL generate and set descriptions for commits with empty descriptions within a specified revset using LLM.
 
 #### Scenario: Batch processing of default mutable commits
 
 **Given**: Multiple commits with empty descriptions exist in the repository
-**When**: Execute `jj-desc backfill`
+**When**: Execute `jj-desc`
 **Then**:
-- Descriptions are set for all commits with empty descriptions in `mutable()`
+- Descriptions are set for all commits with empty descriptions in `::@ & mutable()`
 - Processing results (success/failure) are displayed for each commit
 - A summary showing success and failure counts is displayed at the end
 
 #### Scenario: Specify target range with revset
 
 **Given**: Multiple branches and commits exist in the repository
-**When**: Execute `jj-desc backfill --revisions "mine()"`
+**When**: Execute `jj-desc --revisions "mine()"`
 **Then**:
 - Only commits created by the current user with empty descriptions are processed
 - Commits created by others or commits with existing descriptions are ignored
@@ -27,7 +27,7 @@ The `jj-desc backfill` command SHALL generate and set descriptions for commits w
 #### Scenario: Preview with dry-run mode
 
 **Given**: 5 commits with empty descriptions exist
-**When**: Execute `jj-desc backfill --dry-run`
+**When**: Execute `jj-desc --dry-run`
 **Then**:
 - Generated descriptions for each commit are displayed
 - The `jj describe` command is not actually executed
@@ -36,7 +36,7 @@ The `jj-desc backfill` command SHALL generate and set descriptions for commits w
 #### Scenario: Limit processing count
 
 **Given**: 20 commits with empty descriptions exist
-**When**: Execute `jj-desc backfill --limit 5`
+**When**: Execute `jj-desc --limit 5`
 **Then**:
 - Only the first 5 commits are processed
 - Remaining 15 commits are ignored
@@ -49,7 +49,7 @@ The `--interactive` option SHALL allow users to review generated descriptions fo
 #### Scenario: Individual confirmation in interactive mode
 
 **Given**: 3 commits with empty descriptions exist
-**When**: Execute `jj-desc backfill --interactive`
+**When**: Execute `jj-desc --interactive`
 **Then**:
 - The diff and generated description for the first commit are displayed
 - User is presented with options: "Accept (a) / Skip (s) / Edit (e) / Quit (q)"
@@ -71,23 +71,23 @@ Processing SHALL continue for remaining commits even if individual commit proces
 - Processing continues for the 4th and 5th commits
 - Final summary displays "Success: 4, Failed: 1"
 
-### Requirement: Backward compatibility
+### Requirement: Simplified CLI interface
 
-The tool SHALL maintain existing behavior of the `jj-desc` command (without subcommand).
+The tool SHALL provide a unified interface without subcommands.
 
-#### Scenario: Compatibility with no-argument execution
+#### Scenario: Default behavior with no arguments
 
-**Given**: Existing users execute `jj-desc` without arguments
-**When**: Execute `jj-desc` (no subcommand)
+**Given**: Multiple commits with empty descriptions exist in the repository
+**When**: Execute `jj-desc` (no arguments)
 **Then**:
-- Generates description for the current commit (`@`) (existing behavior)
+- Processes all commits with empty descriptions in `::@ & mutable()` (default revset)
 - No errors occur
 
-#### Scenario: Compatibility with existing options
+#### Scenario: Single commit processing
 
-**Given**: Existing options (`--revision`, `--dry-run`, etc.) are used
-**When**: Execute `jj-desc --revision abc123`
+**Given**: User wants to generate description for a specific commit
+**When**: Execute `jj-desc -r @`
 **Then**:
-- Generates description for the specified commit
-- Behaves identically to the `generate` subcommand
+- Generates description only for the current working copy commit
+- Behaves the same as processing a single-commit revset
 
