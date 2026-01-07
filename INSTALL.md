@@ -302,7 +302,7 @@ jj-desc --dry-run
    which jj-desc
    ls ~/.cargo/bin/jj-desc
    ls /usr/local/bin/jj-desc
-   
+
    # Windows
    where jj-desc
    ```
@@ -312,7 +312,7 @@ jj-desc --dry-run
    # macOS/Linux (add to ~/.zshrc or ~/.bashrc)
    export PATH="$HOME/.cargo/bin:$PATH"
    export PATH="/usr/local/bin:$PATH"
-   
+
    # Windows PowerShell
    $env:Path += ";$env:USERPROFILE\.cargo\bin"
    ```

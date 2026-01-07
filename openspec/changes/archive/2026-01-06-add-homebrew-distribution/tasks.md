@@ -54,7 +54,7 @@ brew install jj-desc
 - [ ] Confirm Formula file is committed to `tumf/homebrew-tap`
 - [ ] Confirm `brew tap tumf/tap && brew install jj-desc` succeeds
 
-**Verification**: 
+**Verification**:
 - GitHub Actions release workflow succeeds
 - Installation via `brew install tumf/tap/jj-desc` works
 

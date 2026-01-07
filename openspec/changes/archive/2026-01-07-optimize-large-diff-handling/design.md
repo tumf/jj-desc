@@ -82,7 +82,7 @@ fn warn_if_large(diff: &FilteredDiff) {
 #[derive(Parser)]
 struct GenerateArgs {
     // 既存オプション...
-    
+
     /// Files to exclude from diff (can be specified multiple times)
     #[arg(short = 'x', long = "exclude")]
     exclude: Vec<String>,
@@ -113,7 +113,7 @@ let filtered = raw_diff
 
 ```rust
 fn is_binary_section(section: &str) -> bool {
-    section.contains("Binary files") || 
+    section.contains("Binary files") ||
     section.contains("GIT binary patch")
 }
 

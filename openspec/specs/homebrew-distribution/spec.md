@@ -96,4 +96,3 @@ The Homebrew formula SHALL support both macOS and Linux on common architectures.
 **Given** the user is on Linux with x86_64 architecture
 **When** the user installs jj-desc via Homebrew
 **Then** the `x86_64-unknown-linux-gnu` binary is downloaded and installed
-

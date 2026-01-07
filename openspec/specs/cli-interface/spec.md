@@ -56,4 +56,3 @@ The `jj-desc` command SHALL provide a single, unified interface without subcomma
 **Then**:
 - User is prompted for each commit
 - Options: Accept (a) / Skip (s) / Quit (q)
-

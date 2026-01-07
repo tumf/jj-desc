@@ -90,4 +90,3 @@ The tool SHALL provide a unified interface without subcommands.
 **Then**:
 - Generates description only for the current working copy commit
 - Behaves the same as processing a single-commit revset
-

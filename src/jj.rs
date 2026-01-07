@@ -343,6 +343,4 @@ mod tests {
         // Ensure it's not empty
         assert!(!EMPTY_MERGE_DESCRIPTION.is_empty());
     }
-
-
 }

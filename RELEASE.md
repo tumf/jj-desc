@@ -114,12 +114,12 @@ Follow [Semantic Versioning](https://semver.org/):
   - Remove/rename CLI flags
   - Change default behavior
   - Remove supported providers
-  
+
 - **MINOR** (0.X.0): New features (backward compatible)
   - Add new providers
   - Add new CLI options
   - Add new configuration options
-  
+
 - **PATCH** (0.0.X): Bug fixes only
   - Fix crashes
   - Fix incorrect behavior

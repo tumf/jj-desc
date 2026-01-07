@@ -92,4 +92,3 @@ The system MUST display diff statistics after filtering when verbose mode is ena
   - List of excluded file paths
 
 ---
-

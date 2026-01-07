@@ -181,5 +181,3 @@ LLM_PROVIDER and LLM_MODEL options.
 - Move publish setting from workspace to package level
 - Explicitly disable crates.io publishing for jj-desc
 - Keep GitHub releases enabled via git_release_enable
-
-

@@ -77,7 +77,7 @@ class JjDesc < Formula
   desc "Generate jj commit descriptions using LLM"
   homepage "https://github.com/tumf/jj-desc"
   version "0.1.0"
-  
+
   on_macos do
     on_arm do
       url "https://github.com/tumf/jj-desc/releases/download/v0.1.0/jj-desc-aarch64-apple-darwin.tar.xz"
@@ -88,7 +88,7 @@ class JjDesc < Formula
       sha256 "..."
     end
   end
-  
+
   on_linux do
     on_arm do
       url "https://github.com/tumf/jj-desc/releases/download/v0.1.0/jj-desc-aarch64-unknown-linux-gnu.tar.xz"
