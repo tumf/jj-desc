@@ -190,72 +190,31 @@ GitHub Actions on push/PR to `main`:
 
 ## Release Process
 
-This project uses **cargo-release** for version management and **cargo-dist** for binary distribution.
-
-### Prerequisites
-
+**Quick Start:**
 ```bash
-cargo install cargo-release
-cargo install git-cliff  # For CHANGELOG generation
+# Minor release (0.3.0 → 0.4.0)
+./scripts/release.sh minor
+
+# Patch release (0.3.0 → 0.3.1)
+./scripts/release.sh patch
 ```
 
-### Creating a Release
+**See [RELEASE.md](RELEASE.md) for complete documentation.**
 
-**Patch release (0.2.0 → 0.2.1):**
-```bash
-cargo release patch --execute
-```
+### What Happens Automatically
 
-**Minor release (0.2.0 → 0.3.0):**
-```bash
-cargo release minor --execute
-```
+After you push a tag, GitHub Actions:
+1. ✅ Builds binaries for all platforms (Linux, macOS, Windows)
+2. ✅ Creates GitHub Release with binaries and install scripts
+3. ✅ Updates Homebrew formula automatically
 
-**Major release (0.2.0 → 1.0.0):**
-```bash
-cargo release major --execute
-```
+### jj-Friendly Workflow
 
-### What Happens
-
-1. `cargo-release` bumps version in `Cargo.toml`
-2. `git-cliff` generates/updates `CHANGELOG.md`
-3. Creates a git commit: `chore: release v0.x.x`
-4. Creates a git tag: `v0.x.x`
-5. You manually push: `git push --follow-tags`
-6. GitHub Actions (`release.yml`) builds binaries for all platforms
-7. GitHub Release is created with:
-   - Release notes from CHANGELOG
-   - Pre-built binaries (Linux, macOS, Windows)
-   - Install scripts (shell, PowerShell)
-   - Homebrew formula
-
-### Dry Run (Recommended First)
-
-```bash
-# Preview changes without executing
-cargo release minor
-```
-
-### Manual Alternative
-
-If `cargo-release` doesn't work as expected:
-
-```bash
-# 1. Update version manually
-vim Cargo.toml  # Change version field
-
-# 2. Generate CHANGELOG
-git cliff -o CHANGELOG.md --tag v0.x.x
-
-# 3. Commit and tag
-git add Cargo.toml CHANGELOG.md
-git commit -m "chore: release v0.x.x"
-git tag v0.x.x
-
-# 4. Push
-git push --follow-tags
-```
+This project uses **manual version management** (not release-plz) because:
+- ✅ No Conventional Commits required
+- ✅ Natural language commit messages work fine
+- ✅ Full control over release timing
+- ✅ Better compatibility with jj workflow
 
 ## Key Dependencies
 
