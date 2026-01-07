@@ -1,7 +1,8 @@
 # diff-optimization Specification
 
 ## Purpose
-TBD - created by archiving change optimize-large-diff-handling. Update Purpose after archive.
+
+Optimize diff handling for LLM-based description generation by reducing token consumption and improving response quality. This includes automatic exclusion of lock files, binary file summarization, user-specified exclusion patterns via `--exclude`, large diff warnings, and verbose statistics output.
 ## Requirements
 ### Requirement: Lock File Exclusion
 

@@ -1,7 +1,8 @@
 # test-coverage Specification
 
 ## Purpose
-TBD - created by archiving change add-unit-tests-for-low-coverage. Update Purpose after archive.
+
+Improve test coverage for modules with low coverage by adding comprehensive unit tests. Target modules include CLI argument parsing (`cli.rs`), LLM client factory (`llm/mod.rs`), Anthropic client (`llm/anthropic.rs`), and OpenAI-compatible client (`llm/openai_compat.rs`). The goal is to increase overall coverage from 53.66% to at least 60%.
 ## Requirements
 ### Requirement: CLI Argument Parsing Tests
 
@@ -63,13 +64,6 @@ The LLM client factory (`src/llm/mod.rs`) SHALL have unit tests verifying correc
 #### Scenario: Create Gemini client
 
 **Given** a config with `Provider::Gemini`  
-**When** `create_client` is called  
-**Then** an `OpenAiCompatClient` is successfully created  
-**And** no error is returned
-
-#### Scenario: Create DeepSeek client
-
-**Given** a config with `Provider::DeepSeek`  
 **When** `create_client` is called  
 **Then** an `OpenAiCompatClient` is successfully created  
 **And** no error is returned

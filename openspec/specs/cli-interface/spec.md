@@ -1,7 +1,8 @@
 # cli-interface Specification
 
 ## Purpose
-TBD - created by archiving change unify-cli-subcommands. Update Purpose after archive.
+
+Provide a simple, unified command-line interface for jj-desc without subcommands. Users can generate commit descriptions with a single `jj-desc` command, using options like `-r` for revision selection, `-n` for limiting commits, `--dry-run` for preview, and `-i` for interactive mode.
 ## Requirements
 ### Requirement: Unified CLI interface
 
@@ -54,5 +55,5 @@ The `jj-desc` command SHALL provide a single, unified interface without subcomma
 **When**: Execute `jj-desc -i`
 **Then**:
 - User is prompted for each commit
-- Options: Accept / Skip / Edit / Quit
+- Options: Accept (a) / Skip (s) / Quit (q)
 

@@ -1,7 +1,8 @@
 # backfill-descriptions Specification
 
 ## Purpose
-TBD - created by archiving change backfill-empty-descriptions. Update Purpose after archive.
+
+Enable batch generation of commit descriptions for multiple commits with empty descriptions. Users can specify target commits via revset, preview changes with `--dry-run`, limit processing count with `--limit`, and interactively review each description with `--interactive` mode. Processing continues even when individual commits fail.
 ## Requirements
 ### Requirement: Batch description generation for multiple commits
 
@@ -52,10 +53,9 @@ The `--interactive` option SHALL allow users to review generated descriptions fo
 **When**: Execute `jj-desc --interactive`
 **Then**:
 - The diff and generated description for the first commit are displayed
-- User is presented with options: "Accept (a) / Skip (s) / Edit (e) / Quit (q)"
+- User is presented with options: "Accept (a) / Skip (s) / Quit (q)"
 - Entering 'a' sets the description and proceeds to the next commit
 - Entering 's' skips setting the description and proceeds to the next commit
-- Entering 'e' opens `$EDITOR` for manual editing before setting
 - Entering 'q' aborts the processing
 
 ### Requirement: Error handling
