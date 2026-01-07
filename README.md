@@ -5,7 +5,7 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 ## Features
 
 - 🤖 Automatically generates meaningful commit descriptions from diffs using LLMs
-- 📦 **Backfill mode**: Generate descriptions for multiple commits at once
+- 📦 Process single or multiple commits with a unified CLI interface
 - 🔄 Works seamlessly with jj's undo workflow (no confirmation prompts needed)
 - 🎯 Supports multiple LLM providers: OpenRouter, OpenAI, Anthropic, Gemini
 - 🔌 Custom endpoint support (Azure OpenAI, Ollama, proxies, etc.)
@@ -202,14 +202,12 @@ For permanent setup, add these to your shell configuration (`~/.bashrc`, `~/.zsh
 
 ## Usage
 
-### Basic usage (Backfill mode)
+### Basic usage
 
-By default, `jj-desc` runs in backfill mode, generating descriptions for all mutable commits without descriptions:
+By default, `jj-desc` generates descriptions for all mutable commits without descriptions in `::@ & mutable()`:
 
 ```bash
 jj-desc
-# or explicitly
-jj-desc backfill
 ```
 
 ### Generate description for a single commit
@@ -217,36 +215,31 @@ jj-desc backfill
 Generate and apply a description for the current working copy:
 
 ```bash
-jj-desc generate
+jj-desc -r @
 ```
 
-### Target specific revision
-
-Generate description for a specific revision:
-
-```bash
-jj-desc generate -r @-
-```
-
-#### Backfill options
+### Target specific revisions
 
 Target specific revisions using jj's revset syntax:
 
 ```bash
-# Backfill your own commits
-jj-desc backfill --revisions "mine()"
+# Process your own commits
+jj-desc -r "mine()"
 
-# Backfill commits in a specific range
-jj-desc backfill --revisions "@..main"
+# Process commits in a specific range
+jj-desc -r "@..main"
+
+# Process a single specific revision
+jj-desc -r @-
 
 # Limit the number of commits to process
-jj-desc backfill --limit 5
+jj-desc -n 5
 
 # Preview before applying
-jj-desc backfill --dry-run
+jj-desc --dry-run
 
 # Interactive mode - confirm each description
-jj-desc backfill --interactive
+jj-desc --interactive
 ```
 
 ### Preview mode
@@ -255,7 +248,6 @@ See what description would be generated without applying it:
 
 ```bash
 jj-desc --dry-run
-jj-desc generate --dry-run
 ```
 
 ### Use a different provider
@@ -264,7 +256,7 @@ Override the provider:
 
 ```bash
 jj-desc --provider openai
-jj-desc backfill --provider anthropic
+jj-desc --provider anthropic
 ```
 
 ### Use a different model
@@ -293,48 +285,21 @@ RUST_LOG=debug jj-desc
 
 ### Command-line options
 
-#### Main command
-
 ```
-Usage: jj-desc [OPTIONS] [COMMAND]
-
-Commands:
-  generate  Generate description for a single commit
-  backfill  Backfill descriptions for multiple commits (default)
-  help      Print this message or the help of the given subcommand(s)
+Usage: jj-desc [OPTIONS]
 
 Options:
-  -v, --verbose  Enable verbose logging
-  -h, --help     Print help
-  -V, --version  Print version
-```
-
-#### Generate subcommand
-
-```
-Usage: jj-desc generate [OPTIONS]
-
-Options:
-      --dry-run                  Preview the generated description without applying it
+  -v, --verbose                  Enable verbose logging
+      --dry-run                  Preview the generated descriptions without applying them
       --provider <PROVIDER>      LLM provider to use [env: LLM_PROVIDER]
       --model <MODEL>            Override the LLM model to use [env: LLM_MODEL]
-  -r, --revision <REVISION>      Target revision (defaults to current working copy)
+      --max-tokens <MAX_TOKENS>  Maximum tokens for LLM response [env: LLM_MAX_TOKENS]
+      --temperature <TEMPERATURE> Temperature for LLM response (0.0-2.0) [env: LLM_TEMPERATURE]
+  -r, --revisions <REVISIONS>    Revset to select target commits [default: "::@ & mutable()"]
+  -n, --limit <LIMIT>            Maximum number of commits to process
+  -i, --interactive              Ask for confirmation before applying each description
   -h, --help                     Print help
-```
-
-#### Backfill subcommand
-
-```
-Usage: jj-desc backfill [OPTIONS]
-
-Options:
-      --dry-run                    Preview the generated descriptions without applying them
-      --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
-      --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
-  -r, --revisions <REVISIONS>      Revset to select target commits [default: "::@ & mutable()"]
-  -n, --limit <LIMIT>              Maximum number of commits to process
-  -i, --interactive                Ask for confirmation before applying each description
-  -h, --help                       Print help
+  -V, --version                  Print version
 ```
 
 ## Examples
@@ -365,11 +330,11 @@ jj-desc --dry-run
 # Add user authentication with JWT tokens
 ```
 
-### Example 3: Backfill multiple commits
+### Example 3: Process multiple commits
 
 ```bash
 # Fill descriptions for all mutable commits without descriptions
-jj-desc backfill
+jj-desc
 
 # Output:
 # Found 3 commit(s) without descriptions
@@ -401,10 +366,10 @@ jj-desc backfill
 # ═══════════════════════
 ```
 
-### Example 4: Interactive backfill
+### Example 4: Interactive mode
 
 ```bash
-jj-desc backfill --interactive --revisions "mine()"
+jj-desc --interactive -r "mine()"
 
 # For each commit, you'll see:
 # Processing: 1/5 (20%)
@@ -503,12 +468,10 @@ See [AGENTS.md](AGENTS.md#release-process) for detailed release instructions.
 
 ```
 src/
-├── main.rs         # Entry point and command dispatching
-├── cli.rs          # Command-line argument parsing (subcommands)
-├── commands/       # Command implementations
-│   ├── mod.rs          # Command module exports
-│   ├── generate.rs     # Generate single commit description
-│   └── backfill.rs     # Backfill multiple commit descriptions
+├── main.rs         # Entry point and logging setup
+├── cli.rs          # Command-line argument parsing
+├── commands/       # Command implementation
+│   └── mod.rs          # Unified command execution
 ├── config.rs       # Configuration management
 ├── provider.rs     # Provider enumeration
 ├── error.rs        # Error type definitions
