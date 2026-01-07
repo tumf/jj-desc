@@ -3,6 +3,9 @@
 use crate::provider::Provider;
 use clap::Parser;
 
+/// Default revset when -r is not specified
+pub const DEFAULT_REVSET: &str = "::@ & mutable()";
+
 #[derive(Parser, Debug)]
 #[command(
     name = "jj-desc",
@@ -32,7 +35,7 @@ pub struct Args {
     pub temperature: Option<f32>,
 
     /// Revset to select target commits (defaults to ::@ & mutable())
-    #[arg(short, long, default_value = "::@ & mutable()")]
+    #[arg(short, long, default_value = DEFAULT_REVSET)]
     pub revisions: String,
 
     /// Maximum number of commits to process
@@ -59,7 +62,7 @@ mod tests {
     #[test]
     fn test_default_revisions() {
         let args = Args::try_parse_from(&["jj-desc"]).unwrap();
-        assert_eq!(args.revisions, "::@ & mutable()");
+        assert_eq!(args.revisions, DEFAULT_REVSET);
     }
 
     #[test]

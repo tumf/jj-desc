@@ -95,6 +95,40 @@ pub async fn is_merge_commit(revision: Option<&str>) -> Result<bool, JjDescError
     Ok(is_merge)
 }
 
+/// Get all commits in the specified revset (regardless of description status)
+/// Used when user explicitly specifies -r option to force regeneration
+#[instrument(skip_all)]
+pub async fn get_commits(revset: &str) -> Result<Vec<Commit>, JjDescError> {
+    let mut cmd = Command::new("jj");
+    cmd.arg("log")
+        .arg("-r")
+        .arg(revset)
+        .arg("--no-graph")
+        .arg("-T")
+        .arg(r#"change_id.short() ++ "\n""#);
+
+    debug!(revset = %revset, "Executing jj log to get commits");
+
+    let output = cmd.output().await?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(JjDescError::JjCommand(stderr.to_string()));
+    }
+
+    let stdout = String::from_utf8(output.stdout)?;
+    let commits: Vec<Commit> = stdout
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| Commit {
+            change_id: line.trim().to_string(),
+        })
+        .collect();
+
+    debug!(count = commits.len(), "Found commits");
+    Ok(commits)
+}
+
 /// Get all commits without descriptions in the specified revset
 /// Includes all commits without descriptions:
 /// - Non-empty commits (have changes to describe via LLM)

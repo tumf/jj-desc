@@ -3,7 +3,7 @@
 use anyhow::{Context, Result};
 use tracing::{info, warn};
 
-use crate::cli::Args;
+use crate::cli::{Args, DEFAULT_REVSET};
 use crate::config::Config;
 use crate::diff_filter;
 use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION};
@@ -24,20 +24,42 @@ pub async fn execute(args: Args) -> Result<()> {
         config.provider, config.model
     );
 
-    // Get commits without descriptions
-    let commits = jj::get_commits_without_description(&args.revisions)
-        .await
-        .context("Failed to get commits without descriptions")?;
+    // Determine if we should filter by empty description or force regeneration
+    let is_default_revset = args.revisions == DEFAULT_REVSET;
+
+    let commits = if is_default_revset {
+        // Default mode: only process commits without descriptions
+        jj::get_commits_without_description(&args.revisions)
+            .await
+            .context("Failed to get commits without descriptions")?
+    } else {
+        // Explicit -r: force regeneration for all matching commits
+        info!("Explicit revset specified, forcing description regeneration");
+        jj::get_commits(&args.revisions)
+            .await
+            .context("Failed to get commits")?
+    };
 
     if commits.is_empty() {
-        println!(
-            "No commits without descriptions found in revset: {}",
-            args.revisions
-        );
+        if is_default_revset {
+            println!(
+                "No commits without descriptions found in revset: {}",
+                args.revisions
+            );
+        } else {
+            println!("No commits found in revset: {}", args.revisions);
+        }
         return Ok(());
     }
 
-    println!("Found {} commit(s) without descriptions", commits.len());
+    if is_default_revset {
+        println!("Found {} commit(s) without descriptions", commits.len());
+    } else {
+        println!(
+            "Found {} commit(s) to process (forcing regeneration)",
+            commits.len()
+        );
+    }
 
     // Apply limit if specified
     let commits_to_process: Vec<_> = if let Some(limit) = args.limit {
