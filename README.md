@@ -5,7 +5,7 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 ## Features
 
 - 🤖 Automatically generates meaningful commit descriptions from diffs using LLMs
-- 📦 Process single or multiple commits with a unified CLI interface
+- 📦 **Batch processing**: Process multiple commits at once with revset targeting
 - 🔄 Works seamlessly with jj's undo workflow (no confirmation prompts needed)
 - 🎯 Supports multiple LLM providers: OpenRouter, OpenAI, Anthropic, Gemini
 - 🔌 Custom endpoint support (Azure OpenAI, Ollama, proxies, etc.)
@@ -241,7 +241,7 @@ jj-desc -n 5
 jj-desc --dry-run
 
 # Interactive mode - confirm each description
-jj-desc --interactive
+jj-desc -i
 ```
 
 ### Preview mode
@@ -293,9 +293,8 @@ Exclude specific files or patterns from the diff sent to the LLM:
 # Exclude specific files
 jj-desc --exclude "*.json" --exclude "*.yaml"
 
-# Works with both generate and backfill
-jj-desc generate -x "docs/*" -x "*.lock"
-jj-desc backfill --exclude "vendor/*"
+# Short form
+jj-desc -x "docs/*" -x "*.lock"
 ```
 
 **Automatically excluded files:**
@@ -316,55 +315,22 @@ If your diff exceeds 50KB after filtering, you'll see a warning:
 
 ### Command-line options
 
-#### Main command
-
 ```
-Usage: jj-desc [OPTIONS] [COMMAND]
-
-Commands:
-  generate  Generate description for a single commit
-  backfill  Backfill descriptions for multiple commits (default)
-
-Options:
-  -v, --verbose  Enable verbose logging
-  -h, --help     Print help
-  -V, --version  Print version
-```
-
-#### Generate subcommand
-
-```
-Usage: jj-desc generate [OPTIONS]
-
-Options:
-      --dry-run                    Preview the generated description without applying it
-      --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
-      --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
-      --max-tokens <MAX_TOKENS>    Maximum tokens for LLM response [env: LLM_MAX_TOKENS]
-      --temperature <TEMPERATURE>  Temperature for LLM response (0.0-2.0) [env: LLM_TEMPERATURE]
-  -r, --revision <REVISION>        Target revision (defaults to current working copy)
-  -x, --exclude <EXCLUDE>          Files to exclude from diff (can be specified multiple times)
-  -v, --verbose                    Enable verbose logging
-  -h, --help                       Print help
-```
-
-#### Backfill subcommand
-
-```
-Usage: jj-desc backfill [OPTIONS]
+Usage: jj-desc [OPTIONS]
 
 Options:
       --dry-run                    Preview the generated descriptions without applying them
-      --provider <PROVIDER>        LLM provider to use [env: LLM_PROVIDER]
-      --model <MODEL>              Override the LLM model to use [env: LLM_MODEL]
-      --max-tokens <MAX_TOKENS>    Maximum tokens for LLM response [env: LLM_MAX_TOKENS]
-      --temperature <TEMPERATURE>  Temperature for LLM response (0.0-2.0) [env: LLM_TEMPERATURE]
+      --provider <PROVIDER>        LLM provider to use (openrouter, openai, anthropic, gemini)
+      --model <MODEL>              Override the LLM model to use
+      --max-tokens <MAX_TOKENS>    Maximum tokens for LLM response
+      --temperature <TEMPERATURE>  Temperature for LLM response (0.0-2.0)
   -r, --revisions <REVISIONS>      Revset to select target commits [default: "::@ & mutable()"]
   -n, --limit <LIMIT>              Maximum number of commits to process
   -i, --interactive                Ask for confirmation before applying each description
   -x, --exclude <EXCLUDE>          Files to exclude from diff (can be specified multiple times)
   -v, --verbose                    Enable verbose logging
   -h, --help                       Print help
+  -V, --version                    Print version
 ```
 
 ## Examples
@@ -434,7 +400,7 @@ jj-desc
 ### Example 4: Interactive mode
 
 ```bash
-jj-desc --interactive -r "mine()"
+jj-desc -i -r "mine()"
 
 # For each commit, you'll see:
 # Processing: 1/5 (20%)
@@ -482,96 +448,13 @@ Unlike git, jj makes it extremely easy to undo any operation:
 
 This design philosophy means we can safely apply descriptions immediately, making the workflow faster and more streamlined.
 
-## Development
-
-### Build
-
-```bash
-cargo build --release
-```
-
-### Run tests
-
-```bash
-cargo test
-```
-
-### Set up pre-commit hooks
-
-```bash
-# Install pre-commit (if not already installed)
-pip install pre-commit
-# or on macOS
-brew install pre-commit
-
-# Install hooks
-./scripts/pre-commit-install.sh
-```
-
-The pre-commit hooks run the **same checks as CI**:
-- **On every commit:**
-  - `cargo fmt --check` - Validate code formatting (fails if not formatted)
-  - `cargo clippy --all-features -- -D warnings` - Lint with zero warnings
-- **On push:**
-  - `cargo test --all-features` - Run all tests
-
-To manually run all checks: `pre-commit run --all-files`
-
-### Release process
-
-This project uses `cargo-release` and `cargo-dist` for releases:
-
-```bash
-# Install tools (one-time setup)
-cargo install cargo-release git-cliff
-
-# Create a release (example: minor version bump 0.2.0 → 0.3.0)
-cargo release minor --execute
-
-# Push tag to trigger GitHub release build
-git push --follow-tags
-```
-
-See [AGENTS.md](AGENTS.md#release-process) for detailed release instructions.
-
-### Project structure
-
-```
-src/
-├── main.rs         # Entry point and logging setup
-├── cli.rs          # Command-line argument parsing
-├── commands/       # Command implementation
-│   └── mod.rs          # Unified command execution
-├── config.rs       # Configuration management
-├── diff_filter.rs  # Diff filtering and optimization
-├── provider.rs     # Provider enumeration
-├── error.rs        # Error type definitions
-├── jj.rs           # jj command integration
-├── llm/
-│   ├── mod.rs          # LLM client trait and factory
-│   ├── openai_compat.rs # OpenAI-compatible client
-│   └── anthropic.rs     # Anthropic Messages API client
-└── prompt.rs       # LLM prompt generation
-```
-
-## Technology Stack
-
-- **Rust Edition 2024** (requires Rust 1.85+)
-- **clap** - CLI argument parsing
-- **tokio** - Async runtime
-- **async-trait** - Trait support for async methods
-- **reqwest** - HTTP client (rustls-tls, no OpenSSL dependency)
-- **serde** - JSON serialization
-- **thiserror** / **anyhow** - Error handling
-- **tracing** - Structured logging
-
 ## License
 
 MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding guidelines, and how to submit changes.
 
 ## Migration Guide
 
