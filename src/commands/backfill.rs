@@ -5,6 +5,7 @@ use tracing::{info, warn};
 
 use crate::cli::BackfillArgs;
 use crate::config::Config;
+use crate::diff_filter;
 use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION};
 use crate::{jj, llm};
 
@@ -81,12 +82,28 @@ pub async fn execute_backfill(args: BackfillArgs) -> Result<()> {
 
         // Generate description based on diff result
         let description = match diff_result {
-            DiffResult::Content(diff) => match client.generate_description(&diff).await {
-                Ok(desc) => desc,
-                Err(e) => {
-                    eprintln!("✗ Failed to generate description: {}", e);
-                    failure_count += 1;
-                    continue;
+            DiffResult::Content(diff) => {
+                // Filter diff to remove lock files and simplify binary files
+                let filtered = diff_filter::filter_diff(&diff, &args.exclude);
+                
+                info!(
+                    "Filtered diff for {}: {} -> {} bytes ({:.1}% reduction)",
+                    commit.change_id,
+                    filtered.original_size,
+                    filtered.filtered_size,
+                    filtered.reduction_percentage()
+                );
+
+                // Display warnings and statistics
+                diff_filter::warn_if_large(&filtered, args.verbose);
+
+                match client.generate_description(&filtered.content).await {
+                    Ok(desc) => desc,
+                    Err(e) => {
+                        eprintln!("✗ Failed to generate description: {}", e);
+                        failure_count += 1;
+                        continue;
+                    }
                 }
             },
             DiffResult::EmptyMerge => {

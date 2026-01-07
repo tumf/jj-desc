@@ -53,6 +53,14 @@ pub struct GenerateArgs {
     /// Target revision (defaults to current working copy)
     #[arg(short, long)]
     pub revision: Option<String>,
+
+    /// Files to exclude from diff (can be specified multiple times)
+    #[arg(short = 'x', long = "exclude")]
+    pub exclude: Vec<String>,
+
+    /// Enable verbose logging
+    #[arg(short, long, global = true)]
+    pub verbose: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -88,6 +96,14 @@ pub struct BackfillArgs {
     /// Ask for confirmation before applying each description
     #[arg(short, long)]
     pub interactive: bool,
+
+    /// Files to exclude from diff (can be specified multiple times)
+    #[arg(short = 'x', long = "exclude")]
+    pub exclude: Vec<String>,
+
+    /// Enable verbose logging
+    #[arg(short, long, global = true)]
+    pub verbose: bool,
 }
 
 #[cfg(test)]

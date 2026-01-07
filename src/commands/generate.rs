@@ -5,6 +5,7 @@ use tracing::info;
 
 use crate::cli::GenerateArgs;
 use crate::config::Config;
+use crate::diff_filter;
 use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION};
 use crate::{jj, llm};
 
@@ -34,11 +35,32 @@ pub async fn execute_generate(args: GenerateArgs) -> Result<()> {
         DiffResult::Content(diff) => {
             info!("Retrieved diff ({} bytes)", diff.len());
 
+            // Filter diff to remove lock files and simplify binary files
+            let filtered = diff_filter::filter_diff(&diff, &args.exclude);
+            
+            info!(
+                "Filtered diff: {} -> {} bytes ({:.1}% reduction)",
+                filtered.original_size,
+                filtered.filtered_size,
+                filtered.reduction_percentage()
+            );
+
+            if filtered.has_exclusions() {
+                info!(
+                    "Excluded {} files, simplified {} binary files",
+                    filtered.excluded_files.len(),
+                    filtered.binary_files.len()
+                );
+            }
+
+            // Display warnings and statistics
+            diff_filter::warn_if_large(&filtered, args.verbose);
+
             // Generate description using LLM
             let client = llm::create_client(config).context("Failed to create LLM client")?;
 
             client
-                .generate_description(&diff)
+                .generate_description(&filtered.content)
                 .await
                 .context("Failed to generate description")?
         }

@@ -1,6 +1,7 @@
 mod cli;
 mod commands;
 mod config;
+mod diff_filter;
 mod error;
 mod jj;
 mod llm;
@@ -48,6 +49,8 @@ async fn main() -> Result<()> {
                 revisions: "::@ & mutable()".to_string(),
                 limit: None,
                 interactive: false,
+                exclude: Vec::new(),
+                verbose: args.verbose,
             };
             commands::execute_backfill(backfill_args).await
         }
