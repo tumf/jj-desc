@@ -1,16 +1,16 @@
-# 設計: refactor-config-resolution
+# Design: refactor-config-resolution
 
-## 設計判断
+## Design Decisions
 
-### 設定値の優先順位
+### Configuration Value Precedence
 
-以下の優先順位で設定値を解決する（高い方が優先）：
+Configuration values are resolved in the following priority order (higher takes precedence):
 
-1. **CommandLine** — CLI 引数で明示指定
-2. **Environment** — 環境変数で設定
-3. **Default** — プロバイダごとのデフォルト値
+1. **CommandLine** — Explicitly specified via CLI arguments
+2. **Environment** — Set via environment variables
+3. **Default** — Provider-specific default values
 
-### ConfigSource による追跡
+### Tracking with ConfigSource
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,23 +21,23 @@ pub enum ConfigSource {
 }
 ```
 
-これにより `with_provider()` で以下の判断が可能：
+This enables the following decision-making in `with_provider()`:
 
 ```rust
 pub fn with_provider(mut self, provider: Option<Provider>) -> Result<Self, JjDescError> {
     if let Some(p) = provider {
         self.provider = p;
 
-        // API キーは必ず新 provider 用を取得（なければエラー）
+        // Always retrieve the new provider's API key (error if missing)
         self.api_key = env::var(p.api_key_env_var())
             .map_err(|_| JjDescError::MissingApiKey)?;
 
-        // モデルはソースに応じて判断
+        // Determine model based on source
         if self.model_source == ConfigSource::Default {
-            // デフォルト値だった場合のみ新 provider のデフォルトに変更
+            // Only change to new provider's default if it was a default value
             self.model = p.default_model().to_string();
         }
-        // Environment / CommandLine の場合は維持（ユーザーの意図を尊重）
+        // Keep existing value for Environment/CommandLine (respect user intent)
 
         self.base_url = env::var(p.base_url_env_var())
             .unwrap_or_else(|_| p.default_base_url().to_string());
@@ -46,19 +46,19 @@ pub fn with_provider(mut self, provider: Option<Provider>) -> Result<Self, JjDes
 }
 ```
 
-### LLM パラメータのデフォルト値
+### LLM Parameter Default Values
 
-| パラメータ | デフォルト | 説明 |
-|------------|------------|------|
-| `max_tokens` | `1024` | コミットメッセージには十分 |
-| `temperature` | `0.3` | 安定した出力を優先 |
+| Parameter | Default | Rationale |
+|-----------|---------|-----------|
+| `max_tokens` | `1024` | Sufficient for commit messages |
+| `temperature` | `0.3` | Prioritize stable output |
 
-### CLI オプション設計
+### CLI Option Design
 
 ```rust
 #[derive(Parser, Debug)]
 pub struct GenerateArgs {
-    // 既存オプション...
+    // Existing options...
 
     /// Maximum tokens for LLM response
     #[arg(long, env = "LLM_MAX_TOKENS")]
@@ -70,9 +70,9 @@ pub struct GenerateArgs {
 }
 ```
 
-### API リクエスト構造体の変更
+### API Request Structure Changes
 
-**OpenAI 互換:**
+**OpenAI-compatible:**
 ```rust
 #[derive(Debug, Serialize)]
 struct ChatCompletionRequest {
@@ -90,7 +90,7 @@ struct ChatCompletionRequest {
 #[derive(Debug, Serialize)]
 struct AnthropicRequest {
     model: String,
-    max_tokens: u32,  // Anthropic は必須
+    max_tokens: u32,  // Required by Anthropic
     system: String,
     messages: Vec<AnthropicMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -98,8 +98,8 @@ struct AnthropicRequest {
 }
 ```
 
-## 後方互換性
+## Backward Compatibility
 
-- 既存の環境変数は引き続き動作
-- 新オプションはすべてオプショナル
-- デフォルト動作は現状と同等
+- Existing environment variables continue to work
+- All new options are optional
+- Default behavior remains equivalent to current implementation

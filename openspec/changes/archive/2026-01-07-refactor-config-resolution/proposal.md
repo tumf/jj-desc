@@ -1,23 +1,23 @@
-# 提案: refactor-config-resolution
+# Proposal: refactor-config-resolution
 
-## 概要
+## Summary
 
-`Config` の解決ロジックを整理し、設定値の優先順位と LLM リクエストパラメータを明確化する。
+Refactor the `Config` resolution logic to clarify configuration value precedence and LLM request parameters.
 
-## 背景・動機
+## Why
 
-現在の実装には以下の問題がある：
+The current implementation has the following issues:
 
-1. **暗黙的なモデル置換**: `with_provider()` でモデルがデフォルト値と一致する場合、新 provider のデフォルトに自動置換される（`config.rs:76-83`）
-   - 問題例: ユーザーが意図的に `gpt-4o` を指定していても、別 provider のデフォルトと一致すると勝手に置換される
+1. **Implicit model replacement**: When the model matches the default value in `with_provider()`, it is automatically replaced with the new provider's default (`config.rs:76-83`)
+   - Example problem: Even if a user intentionally specifies `gpt-4o`, it gets replaced if it matches another provider's default
 
-2. **API キーの不整合**: provider を CLI で切り替えた際、新 provider の API キーが無いと古い provider のキーが残る（`config.rs:73-75`）
+2. **API key inconsistency**: When switching providers via CLI, if the new provider's API key is missing, the old provider's key remains (`config.rs:73-75`)
 
-3. **LLM パラメータ不足**: `max_tokens` / `temperature` が設定できず、プロバイダによっては出力が不安定
+3. **Insufficient LLM parameters**: `max_tokens` and `temperature` cannot be configured, leading to unstable output depending on the provider
 
-## 提案内容
+## What Changes
 
-### 1. 設定値のソース追跡
+### 1. Configuration Source Tracking
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,37 +31,37 @@ pub struct Config {
     pub provider: Provider,
     pub api_key: String,
     pub model: String,
-    pub model_source: ConfigSource,  // 追加
+    pub model_source: ConfigSource,  // Added
     pub base_url: String,
-    pub max_tokens: Option<u32>,     // 追加
-    pub temperature: Option<f32>,    // 追加
+    pub max_tokens: Option<u32>,     // Added
+    pub temperature: Option<f32>,    // Added
 }
 ```
 
-### 2. with_provider() の挙動修正
+### 2. Modify with_provider() Behavior
 
-- `model_source` が `Default` の場合のみ、新 provider のデフォルトモデルに置換
-- API キーは新 provider 用を必須とし、無ければエラー
+- Replace with the new provider's default model only when `model_source` is `Default`
+- Make the new provider's API key mandatory; return an error if missing
 
-### 3. LLM リクエストパラメータ追加
+### 3. Add LLM Request Parameters
 
-- `--max-tokens` / `LLM_MAX_TOKENS` オプション追加
-- `--temperature` / `LLM_TEMPERATURE` オプション追加
-- OpenAI 互換 / Anthropic 両方で使用
+- Add `--max-tokens` / `LLM_MAX_TOKENS` option
+- Add `--temperature` / `LLM_TEMPERATURE` option
+- Support both OpenAI-compatible and Anthropic providers
 
-## 期待される効果
+## Expected Benefits
 
-- 設定の優先順位が明確になり、予期せぬ動作が減る
-- LLM 出力の安定性が向上
-- デバッグ時に「どこから来た値か」が分かる
+- Configuration precedence becomes clear, reducing unexpected behavior
+- Improved LLM output stability
+- Source of configuration values becomes traceable during debugging
 
-## 影響範囲
+## Impact Scope
 
-- `src/config.rs`: `Config` 構造体拡張、解決ロジック修正
-- `src/cli.rs`: 新オプション追加
-- `src/llm/openai_compat.rs`: `max_tokens`, `temperature` 対応
-- `src/llm/anthropic.rs`: `temperature` 対応
+- `src/config.rs`: Extend `Config` struct, modify resolution logic
+- `src/cli.rs`: Add new options
+- `src/llm/openai_compat.rs`: Support `max_tokens`, `temperature`
+- `src/llm/anthropic.rs`: Support `temperature`
 
-## 優先度
+## Priority
 
-**中** — ユーザー体験の改善だが、現状でも動作はする
+**Medium** — Improves user experience, but current implementation is functional

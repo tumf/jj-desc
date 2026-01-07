@@ -1,54 +1,54 @@
-# タスク: refactor-config-resolution
+# Tasks: refactor-config-resolution
 
-## 実装タスク
+## Implementation Tasks
 
-### 1. ConfigSource enum の追加
-- [x] `src/config.rs` に `ConfigSource` enum を追加
-- [x] `Default`, `Environment`, `CommandLine` バリアントを定義
+### 1. Add ConfigSource enum
+- [x] Add `ConfigSource` enum to `src/config.rs`
+- [x] Define `Default`, `Environment`, `CommandLine` variants
 
-### 2. Config 構造体の拡張
-- [x] `model_source: ConfigSource` フィールド追加
-- [x] `max_tokens: Option<u32>` フィールド追加
-- [x] `temperature: Option<f32>` フィールド追加
-- [x] `from_env()` で `model_source` を適切に設定
+### 2. Extend Config struct
+- [x] Add `model_source: ConfigSource` field
+- [x] Add `max_tokens: Option<u32>` field
+- [x] Add `temperature: Option<f32>` field
+- [x] Set `model_source` appropriately in `from_env()`
 
-### 3. with_provider() の修正
-- [x] `model_source == Default` の場合のみモデルを置換
-- [x] 新 provider の API キーが無い場合はエラーを返す
-- [x] 既存テストを更新
+### 3. Modify with_provider()
+- [x] Replace model only when `model_source == Default`
+- [x] Return error if new provider's API key is missing
+- [x] Update existing tests
 
-### 4. with_model() の修正
-- [x] 呼び出し時に `model_source = CommandLine` に設定
+### 4. Modify with_model()
+- [x] Set `model_source = CommandLine` when called
 
-### 5. CLI オプションの追加
-- [x] `GenerateArgs` に `--max-tokens` 追加
-- [x] `GenerateArgs` に `--temperature` 追加
-- [x] `BackfillArgs` に同様のオプション追加
-- [x] 環境変数 `LLM_MAX_TOKENS`, `LLM_TEMPERATURE` 対応
+### 5. Add CLI options
+- [x] Add `--max-tokens` to `GenerateArgs`
+- [x] Add `--temperature` to `GenerateArgs`
+- [x] Add same options to `BackfillArgs`
+- [x] Support environment variables `LLM_MAX_TOKENS`, `LLM_TEMPERATURE`
 
-### 6. openai_compat.rs の更新
-- [x] `ChatCompletionRequest` に `max_tokens`, `temperature` 追加
-- [x] Config から値を取得してリクエストに含める
+### 6. Update openai_compat.rs
+- [x] Add `max_tokens`, `temperature` to `ChatCompletionRequest`
+- [x] Retrieve values from Config and include in request
 
-### 7. anthropic.rs の更新
-- [x] `AnthropicRequest` に `temperature` 追加（max_tokens は既存）
-- [x] Config から値を取得
+### 7. Update anthropic.rs
+- [x] Add `temperature` to `AnthropicRequest` (max_tokens already exists)
+- [x] Retrieve values from Config
 
-### 8. テストの追加
-- [x] `ConfigSource` の追跡が正しく動作するかテスト
-- [x] CLI オプションのテスト
-- [x] 環境変数のテスト
+### 8. Add tests
+- [x] Test that `ConfigSource` tracking works correctly
+- [x] Test CLI options
+- [x] Test environment variables
 
-### 9. CI 確認
-- [x] `cargo clippy -- -D warnings` でエラーなし
-- [x] `cargo test` 全体の実行確認
+### 9. CI verification
+- [x] No errors from `cargo clippy -- -D warnings`
+- [x] Verify full `cargo test` execution
 
-## 依存関係
+## Dependencies
 
-- `refactor-error-types` を先に実装すると、API キー不足エラーの扱いがスムーズ
+- Implementing `refactor-error-types` first would simplify handling of missing API key errors
 
-## 検証方法
+## Verification Methods
 
-1. `--provider openai --model gpt-4o` で provider 切り替えを確認
-2. `--max-tokens 500 --temperature 0.7` でパラメータが反映されるか確認
-3. 不正な設定時に適切なエラーが出るか確認
+1. Verify provider switching with `--provider openai --model gpt-4o`
+2. Verify parameters are reflected with `--max-tokens 500 --temperature 0.7`
+3. Verify appropriate errors are shown for invalid configurations
