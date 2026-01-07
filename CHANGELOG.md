@@ -2,10 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.2] - 2026-01-07
+## [0.4.3] - 2026-01-07
 
 ### Bug Fixes
 
+- Fix: run tests single-threaded to avoid env var race conditions
+- Fix: remove extra trailing newlines from CHANGELOG.md
+- Fix: ensure CHANGELOG.md ends with newline
 - Fix: apply pre-commit formatting fixes (trailing whitespace, EOF)
 
 ### Documentation
@@ -27,7 +30,6 @@ All notable changes to this project will be documented in this file.
 ### Refactoring
 
 - Refactor(cli): simplify CLI structure by removing subcommands
-
 ## [0.4.0] - 2026-01-07
 
 ### Documentation
@@ -62,7 +64,6 @@ implementation tasks, and updated specifications.
 ### Refactoring
 
 - Refactor release documentation and add automated release script
-
 ## [0.3.0] - 2026-01-07
 
 ### Bug Fixes
@@ -111,7 +112,6 @@ maintainability and user experience.
 - Refactor-error-types
 - Refactor-diff-result
 - Refactor-config-resolution
-
 ## [0.2.0] - 2026-01-06
 
 ### Documentation
@@ -138,7 +138,6 @@ maintainability and user experience.
 - Chore: release v0.2.0
 - Chore: bump version to 0.2.0 for feat release
 - Chore: release v0.1.0
-
 ## [0.1.0] - 2026-01-06
 
 ### Bug Fixes
