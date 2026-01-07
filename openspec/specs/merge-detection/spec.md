@@ -37,19 +37,20 @@ When the diff is empty and the commit is a merge commit, the system SHALL automa
 - **Given**: `jj diff` output is empty
 - **And**: The commit is a regular commit (1 parent)
 - **When**: `jj-desc` is executed
-- **Then**: A placeholder description "(empty commit)" is set
+- **Then**: The commit is skipped (no description is set)
+- **And**: A skip message is displayed to the user
 - **And**: No error occurs
 
 ---
 
 ### Requirement: REQ-MERGE-003: Empty Diff Handling
-When encountering an empty diff, the system SHALL check if the commit is a merge commit and set an appropriate description. For merge commits, the system SHALL set "Merge branches" as the description; for non-merge commits, the system SHALL set "(empty commit)" as a placeholder description.
+When encountering an empty diff, the system SHALL check if the commit is a merge commit and take appropriate action. For merge commits, the system SHALL set "Merge branches" as the description; for non-merge commits, the system SHALL skip processing and display a skip message.
 
 #### Scenario: Empty Diff with Merge Commit Check
 - **Given**: `jj diff` output is empty
 - **When**: Processing the commit
 - **Then**: The system SHALL check if it's a merge commit
 - **And**: If merge commit (2+ parents), set "Merge branches" description
-- **And**: If non-merge commit (1 parent), set "(empty commit)" placeholder description
+- **And**: If non-merge commit (1 parent), skip the commit and display skip message
 
 ---

@@ -6,7 +6,7 @@ use tracing::{info, warn};
 use crate::cli::{Args, DEFAULT_REVSET};
 use crate::config::Config;
 use crate::diff_filter;
-use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION};
+use crate::jj::{DiffResult, EMPTY_MERGE_DESCRIPTION};
 use crate::{jj, llm};
 
 pub async fn execute(args: Args) -> Result<()> {
@@ -133,8 +133,10 @@ pub async fn execute(args: Args) -> Result<()> {
                 EMPTY_MERGE_DESCRIPTION.to_string()
             }
             DiffResult::EmptyNonMerge => {
-                // For empty non-merge commits with bookmarks, use placeholder description
-                EMPTY_NON_MERGE_DESCRIPTION.to_string()
+                // Skip empty non-merge commits
+                println!("○ Skipped (empty non-merge commit)");
+                skip_count += 1;
+                continue;
             }
         };
 

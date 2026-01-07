@@ -24,12 +24,9 @@ pub enum DiffResult {
 /// Default description for empty merge commits
 pub const EMPTY_MERGE_DESCRIPTION: &str = "Merge branches";
 
-/// Default description for empty non-merge commits (placeholders)
-pub const EMPTY_NON_MERGE_DESCRIPTION: &str = "(empty commit)";
-
 /// Get the diff for the specified revision (or current working copy if None)
 /// Returns DiffResult::EmptyMerge for merge commits with no changes
-/// Returns DiffResult::EmptyNonMerge for non-merge commits with no changes
+/// Returns DiffResult::EmptyNonMerge for non-merge commits with no changes (to be skipped)
 /// Returns DiffResult::Content for normal diffs
 #[instrument(skip_all)]
 pub async fn get_diff(revision: Option<&str>) -> Result<DiffResult, JjDescError> {
@@ -133,13 +130,13 @@ pub async fn get_commits(revset: &str) -> Result<Vec<Commit>, JjDescError> {
 /// Includes all commits without descriptions:
 /// - Non-empty commits (have changes to describe via LLM)
 /// - Empty merge commits (get "Merge branches" placeholder)
-/// - Empty non-merge commits (get "(empty commit)" placeholder)
+/// - Empty non-merge commits (will be skipped during processing)
 #[instrument(skip_all)]
 pub async fn get_commits_without_description(revset: &str) -> Result<Vec<Commit>, JjDescError> {
     // Include all commits without descriptions, regardless of empty status
     // - Non-empty commits: LLM generates description from diff
     // - Empty merge commits: Use "Merge branches" placeholder
-    // - Empty non-merge commits: Use "(empty commit)" placeholder
+    // - Empty non-merge commits: Skip during processing
     let full_revset = format!(r#"description(exact:"") & ({})"#, revset);
 
     let mut cmd = Command::new("jj");
@@ -347,20 +344,5 @@ mod tests {
         assert!(!EMPTY_MERGE_DESCRIPTION.is_empty());
     }
 
-    #[test]
-    fn test_empty_non_merge_description_constant() {
-        // Verify the constant value for empty non-merge commits
-        assert_eq!(EMPTY_NON_MERGE_DESCRIPTION, "(empty commit)");
-        // Ensure it's not empty
-        assert!(!EMPTY_NON_MERGE_DESCRIPTION.is_empty());
-        // Verify it's wrapped in parentheses (convention for placeholder)
-        assert!(EMPTY_NON_MERGE_DESCRIPTION.starts_with('('));
-        assert!(EMPTY_NON_MERGE_DESCRIPTION.ends_with(')'));
-    }
 
-    #[test]
-    fn test_description_constants_are_different() {
-        // Ensure merge and non-merge descriptions are distinct
-        assert_ne!(EMPTY_MERGE_DESCRIPTION, EMPTY_NON_MERGE_DESCRIPTION);
-    }
 }
