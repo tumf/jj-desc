@@ -17,6 +17,10 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 - ⚡ Optimized for large diffs: automatically excludes lock files and simplifies binary files
 - 🎛️ Customizable file exclusions with `--exclude` option
 
+## Demo
+
+![jj-desc demo](docs/demo.gif)
+
 ## Installation
 
 ### Homebrew (macOS/Linux)
