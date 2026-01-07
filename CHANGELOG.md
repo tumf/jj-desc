@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.1] - 2026-01-07
+## [0.4.2] - 2026-01-07
 
 ### Bug Fixes
 
@@ -19,6 +19,10 @@ All notable changes to this project will be documented in this file.
 - Feat: skip empty non-merge commits instead of setting placeholder
 - Feat(cli): add force regeneration mode for explicit revset usage
 - Feat(release): add branch and uncommitted changes validation
+
+### Miscellaneous Tasks
+
+- Chore: release v0.4.1
 
 ### Refactoring
 
