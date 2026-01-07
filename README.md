@@ -8,7 +8,7 @@ Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions au
 - 📦 **Batch processing**: Process multiple commits at once with revset targeting
 - 🔄 Works seamlessly with jj's undo workflow (no confirmation prompts needed)
 - 🎯 Supports multiple LLM providers: OpenRouter, OpenAI, Anthropic, Gemini
-- 🔌 Custom endpoint support (Azure OpenAI, Ollama, proxies, etc.)
+- 🔌 Custom endpoint support (Azure OpenAI, Ollama, LM Studio, etc.)
 - 🔍 Preview mode with `--dry-run`
 - 💬 Interactive mode for reviewing each description before applying
 - 🎚️ Flexible targeting with jj revset syntax
@@ -198,6 +198,15 @@ export LLM_PROVIDER=openai
 export OPENAI_API_KEY="dummy"  # Ollama doesn't require a key
 export OPENAI_BASE_URL="http://localhost:11434/v1"
 export LLM_MODEL="llama2"
+```
+
+#### LM Studio (Local LLM)
+
+```bash
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY="dummy"  # LM Studio doesn't require a key
+export OPENAI_BASE_URL="http://localhost:1234/v1"
+export LLM_MODEL="your-model-name"
 ```
 
 For permanent setup, add these to your shell configuration (`~/.bashrc`, `~/.zshrc`, etc.).
