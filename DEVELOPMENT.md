@@ -42,9 +42,9 @@ cargo test --all-features
 cargo fmt
 ```
 
-### For jj (Jujutsu) Users
+### For jj (Jujutsu) Users (Recommended)
 
-If you use [jj](https://github.com/martinvonz/jj) instead of git, the git hooks won't run automatically. Add this alias to your jj config to run pre-commit checks before pushing:
+If you use [jj](https://github.com/martinvonz/jj) instead of git, the git hooks won't run automatically. Add this alias to your jj config to run `jj-desc` and pre-commit checks before pushing:
 
 ```bash
 # Edit your jj config
@@ -55,13 +55,21 @@ Add the following:
 
 ```toml
 [aliases]
-push = ["util", "exec", "--", "bash", "-c", "{ [ ! -f .pre-commit-config.yaml ] || pre-commit run --all-files; } && jj git push \"$@\"", ""]
+push = ["util", "exec", "--", "bash", "-c", """
+set -e
+# Generate descriptions for commits without them (if jj-desc is available)
+command -v jj-desc &> /dev/null && jj-desc
+# Run pre-commit checks if config exists
+[ ! -f .pre-commit-config.yaml ] || pre-commit run --all-files
+# Push
+jj git push \"$@\"
+""", ""]
 ```
 
 Now `jj push` will:
-1. Run pre-commit checks if `.pre-commit-config.yaml` exists
-2. Push only if all checks pass
-3. Skip checks in repos without pre-commit config
+1. Auto-generate commit descriptions using `jj-desc` (if installed)
+2. Run pre-commit checks if `.pre-commit-config.yaml` exists
+3. Push only if all checks pass
 
 To bypass checks temporarily, use `jj git push` directly.
 

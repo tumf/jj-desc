@@ -451,6 +451,37 @@ jj-desc -i -r "mine()"
 
 jj often marks merge commits as "empty" because they don't introduce new changes themselves (see [jj FAQ](https://docs.jj-vcs.dev/latest/FAQ/#why-are-most-merge-commits-marked-as-empty)). `jj-desc` detects merge commits automatically and sets an appropriate description without requiring LLM API calls.
 
+## Tips: Automate with jj push alias
+
+You can integrate `jj-desc` into your push workflow by adding a jj alias. This runs `jj-desc` automatically before every push:
+
+```bash
+# Edit your jj config
+jj config edit --user
+```
+
+Add the following alias:
+
+```toml
+[aliases]
+push = ["util", "exec", "--", "bash", "-c", """
+set -e
+# Generate descriptions for commits without them (if jj-desc is available)
+command -v jj-desc &> /dev/null && jj-desc
+# Run pre-commit checks if config exists
+[ ! -f .pre-commit-config.yaml ] || pre-commit run --all-files
+# Push
+jj git push \"$@\"
+""", ""]
+```
+
+Now `jj push` will:
+1. Auto-generate descriptions for commits without them
+2. Run pre-commit checks (if configured)
+3. Push to remote
+
+To bypass, use `jj git push` directly.
+
 ## Why no confirmation prompt?
 
 Unlike git, jj makes it extremely easy to undo any operation:
