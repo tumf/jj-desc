@@ -264,6 +264,10 @@ fn simplify_binary_section(file_path: &str) -> String {
 mod tests {
     use super::*;
 
+    // =========================================
+    // FilteredDiff struct tests
+    // =========================================
+
     #[test]
     fn test_filtered_diff_new() {
         let content = "test content".to_string();
@@ -297,6 +301,30 @@ mod tests {
     }
 
     #[test]
+    fn test_filtered_diff_line_count_empty() {
+        let diff = FilteredDiff {
+            content: String::new(),
+            original_size: 0,
+            filtered_size: 0,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        assert_eq!(diff.line_count(), 0);
+    }
+
+    #[test]
+    fn test_filtered_diff_line_count_single_line_no_newline() {
+        let diff = FilteredDiff {
+            content: "single line".to_string(),
+            original_size: 11,
+            filtered_size: 11,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        assert_eq!(diff.line_count(), 1);
+    }
+
+    #[test]
     fn test_filtered_diff_has_exclusions() {
         let content = "content".to_string();
         let mut diff = FilteredDiff {
@@ -309,6 +337,30 @@ mod tests {
         assert!(!diff.has_exclusions());
 
         diff.excluded_files.push("test.lock".to_string());
+        assert!(diff.has_exclusions());
+    }
+
+    #[test]
+    fn test_filtered_diff_has_exclusions_binary_only() {
+        let diff = FilteredDiff {
+            content: "content".to_string(),
+            original_size: 100,
+            filtered_size: 7,
+            excluded_files: Vec::new(),
+            binary_files: vec!["image.png".to_string()],
+        };
+        assert!(diff.has_exclusions());
+    }
+
+    #[test]
+    fn test_filtered_diff_has_exclusions_both() {
+        let diff = FilteredDiff {
+            content: "content".to_string(),
+            original_size: 100,
+            filtered_size: 7,
+            excluded_files: vec!["Cargo.lock".to_string()],
+            binary_files: vec!["image.png".to_string()],
+        };
         assert!(diff.has_exclusions());
     }
 
@@ -351,6 +403,89 @@ mod tests {
     }
 
     #[test]
+    fn test_filtered_diff_reduction_percentage_zero_original() {
+        let diff = FilteredDiff {
+            content: String::new(),
+            original_size: 0,
+            filtered_size: 0,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        assert_eq!(diff.reduction_percentage(), 0.0);
+    }
+
+    #[test]
+    fn test_filtered_diff_reduction_percentage_full_reduction() {
+        let diff = FilteredDiff {
+            content: String::new(),
+            original_size: 100,
+            filtered_size: 0,
+            excluded_files: vec!["all.lock".to_string()],
+            binary_files: Vec::new(),
+        };
+        assert_eq!(diff.reduction_percentage(), 100.0);
+    }
+
+    #[test]
+    fn test_filtered_diff_clone() {
+        let original = FilteredDiff {
+            content: "test".to_string(),
+            original_size: 100,
+            filtered_size: 50,
+            excluded_files: vec!["file.lock".to_string()],
+            binary_files: vec!["image.png".to_string()],
+        };
+        let cloned = original.clone();
+        assert_eq!(original, cloned);
+    }
+
+    #[test]
+    fn test_filtered_diff_debug() {
+        let diff = FilteredDiff {
+            content: "test".to_string(),
+            original_size: 100,
+            filtered_size: 50,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        let debug_str = format!("{:?}", diff);
+        assert!(debug_str.contains("FilteredDiff"));
+        assert!(debug_str.contains("100"));
+        assert!(debug_str.contains("50"));
+    }
+
+    #[test]
+    fn test_filtered_diff_eq() {
+        let diff1 = FilteredDiff {
+            content: "test".to_string(),
+            original_size: 100,
+            filtered_size: 50,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        let diff2 = FilteredDiff {
+            content: "test".to_string(),
+            original_size: 100,
+            filtered_size: 50,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        let diff3 = FilteredDiff {
+            content: "different".to_string(),
+            original_size: 100,
+            filtered_size: 50,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        assert_eq!(diff1, diff2);
+        assert_ne!(diff1, diff3);
+    }
+
+    // =========================================
+    // extract_file_path tests
+    // =========================================
+
+    #[test]
     fn test_extract_file_path() {
         let section = "a/Cargo.lock b/Cargo.lock\nindex 1234..5678";
         assert_eq!(extract_file_path(section), "Cargo.lock");
@@ -358,6 +493,44 @@ mod tests {
         let section2 = "a/src/main.rs b/src/main.rs\n--- a/src/main.rs";
         assert_eq!(extract_file_path(section2), "src/main.rs");
     }
+
+    #[test]
+    fn test_extract_file_path_empty_section() {
+        assert_eq!(extract_file_path(""), "");
+    }
+
+    #[test]
+    fn test_extract_file_path_no_b_prefix() {
+        // Fallback to a/ prefix
+        let section = "a/only.txt";
+        assert_eq!(extract_file_path(section), "only.txt");
+    }
+
+    #[test]
+    fn test_extract_file_path_invalid_format() {
+        let section = "some random text without proper format";
+        assert_eq!(extract_file_path(section), "");
+    }
+
+    #[test]
+    fn test_extract_file_path_deep_nested() {
+        let section = "a/src/deeply/nested/path/file.rs b/src/deeply/nested/path/file.rs\n";
+        assert_eq!(
+            extract_file_path(section),
+            "src/deeply/nested/path/file.rs"
+        );
+    }
+
+    #[test]
+    fn test_extract_file_path_with_spaces_in_line() {
+        // File path extraction stops at whitespace
+        let section = "a/file.txt b/file.txt extra stuff\n";
+        assert_eq!(extract_file_path(section), "file.txt");
+    }
+
+    // =========================================
+    // matches_pattern tests
+    // =========================================
 
     #[test]
     fn test_matches_pattern_exact() {
@@ -368,9 +541,104 @@ mod tests {
     #[test]
     fn test_matches_pattern_wildcard() {
         assert!(matches_pattern("file.lock", "*.lock"));
-        assert!(matches_pattern("package-lock.json", "*.lock") == false);
+        assert!(!matches_pattern("package-lock.json", "*.lock"));
         assert!(matches_pattern("test.lockb", "*.lockb"));
     }
+
+    #[test]
+    fn test_matches_pattern_wildcard_extension() {
+        assert!(matches_pattern("any.lock", "*.lock"));
+        assert!(matches_pattern("deeply/nested/file.lock", "*.lock"));
+        assert!(!matches_pattern("file.locked", "*.lock"));
+    }
+
+    #[test]
+    fn test_matches_pattern_no_match() {
+        assert!(!matches_pattern("file.txt", "*.lock"));
+        assert!(!matches_pattern("file.txt", "other.txt"));
+    }
+
+    // =========================================
+    // should_exclude tests
+    // =========================================
+
+    #[test]
+    fn test_should_exclude_exact_match() {
+        let patterns = vec!["Cargo.lock".to_string()];
+        assert!(should_exclude("Cargo.lock", &patterns));
+        assert!(!should_exclude("Cargo.toml", &patterns));
+    }
+
+    #[test]
+    fn test_should_exclude_wildcard() {
+        let patterns = vec!["*.lock".to_string()];
+        assert!(should_exclude("file.lock", &patterns));
+        assert!(should_exclude("any.lock", &patterns));
+        assert!(!should_exclude("file.txt", &patterns));
+    }
+
+    #[test]
+    fn test_should_exclude_multiple_patterns() {
+        let patterns = vec![
+            "Cargo.lock".to_string(),
+            "*.json".to_string(),
+            "vendor/*".to_string(),
+        ];
+        assert!(should_exclude("Cargo.lock", &patterns));
+        assert!(should_exclude("package.json", &patterns));
+        assert!(should_exclude("vendor/lib.rs", &patterns));
+        assert!(!should_exclude("src/main.rs", &patterns));
+    }
+
+    #[test]
+    fn test_should_exclude_empty_patterns() {
+        let patterns: Vec<String> = Vec::new();
+        assert!(!should_exclude("any_file.txt", &patterns));
+    }
+
+    // =========================================
+    // simple_glob_match tests
+    // =========================================
+
+    #[test]
+    fn test_simple_glob_match_no_wildcard() {
+        assert!(simple_glob_match("file.txt", "file.txt"));
+        assert!(!simple_glob_match("file.txt", "other.txt"));
+    }
+
+    #[test]
+    fn test_simple_glob_match_prefix_wildcard() {
+        // Pattern: *suffix
+        assert!(simple_glob_match("test.lock", "*.lock"));
+        assert!(simple_glob_match("anything.lock", "*.lock"));
+    }
+
+    #[test]
+    fn test_simple_glob_match_suffix_wildcard() {
+        // Pattern: prefix*
+        assert!(simple_glob_match("vendor/lib.rs", "vendor/*"));
+        assert!(simple_glob_match("vendor/anything", "vendor/*"));
+        assert!(!simple_glob_match("src/lib.rs", "vendor/*"));
+    }
+
+    #[test]
+    fn test_simple_glob_match_middle_wildcard() {
+        // Pattern: prefix*suffix
+        assert!(simple_glob_match("test_file.rs", "test*.rs"));
+        assert!(simple_glob_match("test_anything_here.rs", "test*.rs"));
+        assert!(!simple_glob_match("other_file.rs", "test*.rs"));
+    }
+
+    #[test]
+    fn test_simple_glob_match_multiple_wildcards() {
+        // Multiple wildcards - checks start and end only
+        assert!(simple_glob_match("a_b_c", "a*b*c"));
+        assert!(simple_glob_match("a_x_c", "a*b*c")); // Only checks first and last parts
+    }
+
+    // =========================================
+    // is_binary_section tests
+    // =========================================
 
     #[test]
     fn test_is_binary_section() {
@@ -382,10 +650,48 @@ mod tests {
     }
 
     #[test]
+    fn test_is_binary_section_git_binary_patch() {
+        let section = "a/file.bin b/file.bin\nGIT binary patch\nliteral 1234";
+        assert!(is_binary_section(section));
+    }
+
+    #[test]
+    fn test_is_binary_section_empty() {
+        assert!(!is_binary_section(""));
+    }
+
+    #[test]
+    fn test_is_binary_section_text_mentioning_binary() {
+        // This will match because it contains "Binary files" substring
+        let section = "// This code handles Binary files";
+        assert!(is_binary_section(section));
+    }
+
+    // =========================================
+    // simplify_binary_section tests
+    // =========================================
+
+    #[test]
     fn test_simplify_binary_section() {
         let simplified = simplify_binary_section("image.png");
         assert_eq!(simplified, "Binary file image.png changed\n");
     }
+
+    #[test]
+    fn test_simplify_binary_section_nested_path() {
+        let simplified = simplify_binary_section("assets/images/logo.png");
+        assert_eq!(simplified, "Binary file assets/images/logo.png changed\n");
+    }
+
+    #[test]
+    fn test_simplify_binary_section_empty_path() {
+        let simplified = simplify_binary_section("");
+        assert_eq!(simplified, "Binary file  changed\n");
+    }
+
+    // =========================================
+    // filter_diff tests
+    // =========================================
 
     #[test]
     fn test_filter_diff_excludes_lock_files() {
@@ -445,10 +751,159 @@ diff --git a/src/main.rs b/src/main.rs
     }
 
     #[test]
+    fn test_filter_diff_empty_input() {
+        let filtered = filter_diff("", &[]);
+        assert!(filtered.content.is_empty());
+        assert_eq!(filtered.original_size, 0);
+        assert_eq!(filtered.filtered_size, 0);
+        assert!(filtered.excluded_files.is_empty());
+        assert!(filtered.binary_files.is_empty());
+    }
+
+    #[test]
+    fn test_filter_diff_no_exclusions() {
+        let raw_diff = "\
+diff --git a/src/lib.rs b/src/lib.rs
++pub fn foo() {}
+";
+        let filtered = filter_diff(raw_diff, &[]);
+
+        assert!(filtered.excluded_files.is_empty());
+        assert!(filtered.binary_files.is_empty());
+        assert!(filtered.content.contains("src/lib.rs"));
+    }
+
+    #[test]
+    fn test_filter_diff_all_excluded() {
+        let raw_diff = "\
+diff --git a/Cargo.lock b/Cargo.lock
++lock content
+diff --git a/package-lock.json b/package-lock.json
++json content
+";
+        let filtered = filter_diff(raw_diff, &[]);
+
+        assert_eq!(filtered.excluded_files.len(), 2);
+        assert!(filtered.content.is_empty());
+    }
+
+    #[test]
+    fn test_filter_diff_preserves_order() {
+        let raw_diff = "\
+diff --git a/a.rs b/a.rs
++a
+diff --git a/b.rs b/b.rs
++b
+diff --git a/c.rs b/c.rs
++c
+";
+        let filtered = filter_diff(raw_diff, &[]);
+
+        let content = &filtered.content;
+        let pos_a = content.find("a.rs").unwrap();
+        let pos_b = content.find("b.rs").unwrap();
+        let pos_c = content.find("c.rs").unwrap();
+        assert!(pos_a < pos_b);
+        assert!(pos_b < pos_c);
+    }
+
+    #[test]
+    fn test_filter_diff_multiple_default_excludes() {
+        let raw_diff = "\
+diff --git a/Cargo.lock b/Cargo.lock
++cargo
+diff --git a/package-lock.json b/package-lock.json
++npm
+diff --git a/yarn.lock b/yarn.lock
++yarn
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
++pnpm
+diff --git a/src/main.rs b/src/main.rs
++code
+";
+        let filtered = filter_diff(raw_diff, &[]);
+
+        assert_eq!(filtered.excluded_files.len(), 4);
+        assert!(filtered.excluded_files.contains(&"Cargo.lock".to_string()));
+        assert!(filtered
+            .excluded_files
+            .contains(&"package-lock.json".to_string()));
+        assert!(filtered.excluded_files.contains(&"yarn.lock".to_string()));
+        assert!(filtered
+            .excluded_files
+            .contains(&"pnpm-lock.yaml".to_string()));
+        assert!(filtered.content.contains("src/main.rs"));
+    }
+
+    // =========================================
+    // warn_if_large tests (indirect via filter_diff)
+    // =========================================
+
+    #[test]
+    fn test_warning_threshold_constant() {
+        assert_eq!(WARNING_THRESHOLD, 50 * 1024);
+    }
+
+    #[test]
+    fn test_warn_if_large_small_diff() {
+        let small_diff = FilteredDiff {
+            content: "small".to_string(),
+            original_size: 5,
+            filtered_size: 5,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        // Should not panic or warn
+        warn_if_large(&small_diff, false);
+    }
+
+    #[test]
+    fn test_warn_if_large_with_exclusions_verbose() {
+        let diff = FilteredDiff {
+            content: "content".to_string(),
+            original_size: 1000,
+            filtered_size: 7,
+            excluded_files: vec!["Cargo.lock".to_string()],
+            binary_files: vec!["image.png".to_string()],
+        };
+        // Should not panic
+        warn_if_large(&diff, true);
+    }
+
+    #[test]
+    fn test_warn_if_large_no_exclusions_verbose() {
+        let diff = FilteredDiff {
+            content: "content".to_string(),
+            original_size: 7,
+            filtered_size: 7,
+            excluded_files: Vec::new(),
+            binary_files: Vec::new(),
+        };
+        // Should not panic - verbose mode but no exclusions to show
+        warn_if_large(&diff, true);
+    }
+
+    // =========================================
+    // DEFAULT_EXCLUDES constant tests
+    // =========================================
+
+    #[test]
     fn test_default_excludes_constant() {
         assert!(DEFAULT_EXCLUDES.contains(&"Cargo.lock"));
         assert!(DEFAULT_EXCLUDES.contains(&"package-lock.json"));
         assert!(DEFAULT_EXCLUDES.contains(&"pnpm-lock.yaml"));
         assert!(DEFAULT_EXCLUDES.contains(&"yarn.lock"));
+    }
+
+    #[test]
+    fn test_default_excludes_wildcard_patterns() {
+        assert!(DEFAULT_EXCLUDES.contains(&"*.lock"));
+        assert!(DEFAULT_EXCLUDES.contains(&"*.lockb"));
+    }
+
+    #[test]
+    fn test_default_excludes_count() {
+        // Ensure we have all expected default exclusions
+        assert!(DEFAULT_EXCLUDES.len() >= 6);
     }
 }

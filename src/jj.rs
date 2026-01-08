@@ -196,6 +196,57 @@ pub async fn set_description(description: &str, revision: Option<&str>) -> Resul
 mod tests {
     use super::*;
 
+    // =========================================
+    // Commit struct tests
+    // =========================================
+
+    #[test]
+    fn test_commit_new() {
+        let commit = Commit {
+            change_id: "abc123".to_string(),
+        };
+        assert_eq!(commit.change_id, "abc123");
+    }
+
+    #[test]
+    fn test_commit_clone() {
+        let original = Commit {
+            change_id: "xyz789".to_string(),
+        };
+        let cloned = original.clone();
+        assert_eq!(original.change_id, cloned.change_id);
+    }
+
+    #[test]
+    fn test_commit_debug() {
+        let commit = Commit {
+            change_id: "test".to_string(),
+        };
+        let debug_str = format!("{:?}", commit);
+        assert!(debug_str.contains("Commit"));
+        assert!(debug_str.contains("test"));
+    }
+
+    #[test]
+    fn test_commit_with_empty_change_id() {
+        let commit = Commit {
+            change_id: String::new(),
+        };
+        assert!(commit.change_id.is_empty());
+    }
+
+    #[test]
+    fn test_commit_with_special_characters() {
+        let commit = Commit {
+            change_id: "abc_123-xyz".to_string(),
+        };
+        assert_eq!(commit.change_id, "abc_123-xyz");
+    }
+
+    // =========================================
+    // DiffResult enum tests
+    // =========================================
+
     #[tokio::test]
     #[ignore] // This test requires a jj repository with actual commits
     async fn test_is_merge_commit_requires_jj_repo() {
@@ -342,5 +393,54 @@ mod tests {
         assert_eq!(EMPTY_MERGE_DESCRIPTION, "Merge branches");
         // Ensure it's not empty
         assert!(!EMPTY_MERGE_DESCRIPTION.is_empty());
+    }
+
+    #[test]
+    fn test_diff_result_content_with_empty_string() {
+        // Empty string is still Content, not EmptyMerge/EmptyNonMerge
+        let result = DiffResult::Content(String::new());
+        match result {
+            DiffResult::Content(content) => {
+                assert!(content.is_empty());
+            }
+            _ => panic!("Expected Content variant"),
+        }
+    }
+
+    #[test]
+    fn test_diff_result_content_with_large_diff() {
+        // Test with a large diff content
+        let large_diff = "x".repeat(100_000);
+        let result = DiffResult::Content(large_diff.clone());
+        match result {
+            DiffResult::Content(content) => {
+                assert_eq!(content.len(), 100_000);
+            }
+            _ => panic!("Expected Content variant"),
+        }
+    }
+
+    #[test]
+    fn test_diff_result_content_with_multiline() {
+        let multiline = "line1\nline2\nline3\n".to_string();
+        let result = DiffResult::Content(multiline.clone());
+        match result {
+            DiffResult::Content(content) => {
+                assert_eq!(content.lines().count(), 3);
+            }
+            _ => panic!("Expected Content variant"),
+        }
+    }
+
+    #[test]
+    fn test_diff_result_content_with_unicode() {
+        let unicode_diff = "日本語テスト\n🎉 emoji\nüñíçödé".to_string();
+        let result = DiffResult::Content(unicode_diff.clone());
+        match result {
+            DiffResult::Content(content) => {
+                assert_eq!(content, unicode_diff);
+            }
+            _ => panic!("Expected Content variant"),
+        }
     }
 }
