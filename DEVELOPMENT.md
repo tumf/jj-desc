@@ -42,13 +42,40 @@ cargo test --all-features
 cargo fmt
 ```
 
+### For jj (Jujutsu) Users
+
+If you use [jj](https://github.com/martinvonz/jj) instead of git, the git hooks won't run automatically. Add this alias to your jj config to run pre-commit checks before pushing:
+
+```bash
+# Edit your jj config
+jj config edit --user
+```
+
+Add the following:
+
+```toml
+[aliases]
+push = ["util", "exec", "--", "bash", "-c", "{ [ ! -f .pre-commit-config.yaml ] || pre-commit run --all-files; } && jj git push \"$@\"", ""]
+```
+
+Now `jj push` will:
+1. Run pre-commit checks if `.pre-commit-config.yaml` exists
+2. Push only if all checks pass
+3. Skip checks in repos without pre-commit config
+
+To bypass checks temporarily, use `jj git push` directly.
+
 ### Bypass Hooks (Not Recommended)
 
 If you need to bypass hooks temporarily:
 
 ```bash
+# For git users
 git commit --no-verify     # Skip pre-commit hooks
 git push --no-verify       # Skip pre-push hooks
+
+# For jj users
+jj git push                # Use git push directly (bypasses jj push alias)
 ```
 
 **Warning:** This may cause CI to fail. Only use when necessary.
