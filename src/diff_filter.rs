@@ -515,10 +515,7 @@ mod tests {
     #[test]
     fn test_extract_file_path_deep_nested() {
         let section = "a/src/deeply/nested/path/file.rs b/src/deeply/nested/path/file.rs\n";
-        assert_eq!(
-            extract_file_path(section),
-            "src/deeply/nested/path/file.rs"
-        );
+        assert_eq!(extract_file_path(section), "src/deeply/nested/path/file.rs");
     }
 
     #[test]
@@ -825,13 +822,17 @@ diff --git a/src/main.rs b/src/main.rs
 
         assert_eq!(filtered.excluded_files.len(), 4);
         assert!(filtered.excluded_files.contains(&"Cargo.lock".to_string()));
-        assert!(filtered
-            .excluded_files
-            .contains(&"package-lock.json".to_string()));
+        assert!(
+            filtered
+                .excluded_files
+                .contains(&"package-lock.json".to_string())
+        );
         assert!(filtered.excluded_files.contains(&"yarn.lock".to_string()));
-        assert!(filtered
-            .excluded_files
-            .contains(&"pnpm-lock.yaml".to_string()));
+        assert!(
+            filtered
+                .excluded_files
+                .contains(&"pnpm-lock.yaml".to_string())
+        );
         assert!(filtered.content.contains("src/main.rs"));
     }
 
