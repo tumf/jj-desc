@@ -488,3 +488,4 @@ To take advantage of new providers, simply set `LLM_PROVIDER` and the appropriat
 - [OpenAI Platform](https://platform.openai.com/)
 - [Anthropic Console](https://console.anthropic.com/)
 - [Google AI Studio](https://aistudio.google.com/)
+- [jj-desc についてのブログ記事 (日本語)](https://blog.tumf.dev/posts/diary/2026/1/8/jj-desc-release/)
