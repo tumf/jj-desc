@@ -2,6 +2,8 @@
 
 Generate [jj (Jujutsu)](https://github.com/martinvonz/jj) commit descriptions automatically using LLMs.
 
+English | [日本語](README.ja.md)
+
 ## Features
 
 - 🤖 Automatically generates meaningful commit descriptions from diffs using LLMs
