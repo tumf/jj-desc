@@ -2,12 +2,14 @@
 
 use crate::config::Config;
 use crate::error::JjDescError;
-use crate::llm::LlmClient;
+use crate::llm::{
+    DEFAULT_CONNECT_TIMEOUT_SECS, DEFAULT_MAX_TOKENS, DEFAULT_REQUEST_TIMEOUT_SECS,
+    DEFAULT_TEMPERATURE, LlmClient, build_http_client,
+};
 use crate::prompt::{SYSTEM_PROMPT, build_user_prompt};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use tracing::{debug, instrument};
 
 #[derive(Debug, Serialize)]
@@ -44,17 +46,7 @@ pub struct OpenAICompatClient {
 
 impl OpenAICompatClient {
     pub fn new(config: Config) -> Result<Self, JjDescError> {
-        let client = Client::builder()
-            .use_rustls_tls()
-            .http1_only()
-            .timeout(Duration::from_secs(30))
-            .connect_timeout(Duration::from_secs(5))
-            .user_agent(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            ))
-            .build()?;
+        let client = build_http_client(DEFAULT_REQUEST_TIMEOUT_SECS, DEFAULT_CONNECT_TIMEOUT_SECS)?;
 
         Ok(Self { client, config })
     }
@@ -78,8 +70,8 @@ impl LlmClient for OpenAICompatClient {
                     content: build_user_prompt(diff),
                 },
             ],
-            max_tokens: self.config.max_tokens.or(Some(1024)),
-            temperature: self.config.temperature.or(Some(0.3)),
+            max_tokens: self.config.max_tokens.or(Some(DEFAULT_MAX_TOKENS)),
+            temperature: self.config.temperature.or(Some(DEFAULT_TEMPERATURE)),
         };
 
         debug!(
@@ -136,19 +128,8 @@ impl LlmClient for OpenAICompatClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::llm::test_config;
     use crate::provider::Provider;
-
-    fn test_config(provider: Provider) -> Config {
-        Config {
-            provider,
-            api_key: "test-key".to_string(),
-            model: provider.default_model().to_string(),
-            model_source: crate::config::ConfigSource::Default,
-            base_url: provider.default_base_url().to_string(),
-            max_tokens: None,
-            temperature: None,
-        }
-    }
 
     #[test]
     fn test_client_initialization_openai() {

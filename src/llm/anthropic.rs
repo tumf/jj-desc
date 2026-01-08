@@ -2,12 +2,14 @@
 
 use crate::config::Config;
 use crate::error::JjDescError;
-use crate::llm::LlmClient;
+use crate::llm::{
+    DEFAULT_CONNECT_TIMEOUT_SECS, DEFAULT_MAX_TOKENS, DEFAULT_REQUEST_TIMEOUT_SECS,
+    DEFAULT_TEMPERATURE, LlmClient, build_http_client,
+};
 use crate::prompt::{SYSTEM_PROMPT, build_user_prompt};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use tracing::{debug, instrument};
 
 const ANTHROPIC_VERSION: &str = "2023-06-01";
@@ -49,17 +51,7 @@ pub struct AnthropicClient {
 
 impl AnthropicClient {
     pub fn new(config: Config) -> Result<Self, JjDescError> {
-        let client = Client::builder()
-            .use_rustls_tls()
-            .http1_only()
-            .timeout(Duration::from_secs(30))
-            .connect_timeout(Duration::from_secs(5))
-            .user_agent(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            ))
-            .build()?;
+        let client = build_http_client(DEFAULT_REQUEST_TIMEOUT_SECS, DEFAULT_CONNECT_TIMEOUT_SECS)?;
 
         Ok(Self { client, config })
     }
@@ -73,13 +65,13 @@ impl LlmClient for AnthropicClient {
 
         let request = AnthropicRequest {
             model: self.config.model.clone(),
-            max_tokens: self.config.max_tokens.unwrap_or(1024),
+            max_tokens: self.config.max_tokens.unwrap_or(DEFAULT_MAX_TOKENS),
             system: SYSTEM_PROMPT.to_string(),
             messages: vec![AnthropicMessage {
                 role: "user".to_string(),
                 content: build_user_prompt(diff),
             }],
-            temperature: self.config.temperature.or(Some(0.3)),
+            temperature: self.config.temperature.or(Some(DEFAULT_TEMPERATURE)),
         };
 
         debug!(
@@ -131,30 +123,19 @@ impl LlmClient for AnthropicClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::llm::test_config;
     use crate::provider::Provider;
-
-    fn test_config() -> Config {
-        Config {
-            provider: Provider::Anthropic,
-            api_key: "test-key".to_string(),
-            model: "claude-sonnet-4-20250514".to_string(),
-            model_source: crate::config::ConfigSource::Default,
-            base_url: "https://api.anthropic.com".to_string(),
-            max_tokens: None,
-            temperature: None,
-        }
-    }
 
     #[test]
     fn test_client_initialization() {
-        let config = test_config();
+        let config = test_config(Provider::Anthropic);
         let result = AnthropicClient::new(config);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_client_with_custom_model() {
-        let mut config = test_config();
+        let mut config = test_config(Provider::Anthropic);
         config.model = "claude-3-5-sonnet-20241022".to_string();
         let client = AnthropicClient::new(config.clone()).unwrap();
         assert_eq!(client.config.model, "claude-3-5-sonnet-20241022");
@@ -162,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_client_with_custom_base_url() {
-        let mut config = test_config();
+        let mut config = test_config(Provider::Anthropic);
         config.base_url = "https://custom.anthropic.com".to_string();
         let client = AnthropicClient::new(config.clone()).unwrap();
         assert_eq!(client.config.base_url, "https://custom.anthropic.com");
@@ -170,9 +151,11 @@ mod tests {
 
     #[test]
     fn test_request_structure() {
+        use crate::llm::DEFAULT_MAX_TOKENS;
+
         let request = AnthropicRequest {
             model: "claude-sonnet-4-20250514".to_string(),
-            max_tokens: 1024,
+            max_tokens: DEFAULT_MAX_TOKENS,
             system: SYSTEM_PROMPT.to_string(),
             messages: vec![AnthropicMessage {
                 role: "user".to_string(),

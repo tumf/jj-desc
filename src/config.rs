@@ -113,16 +113,16 @@ impl Config {
 
     /// Override max_tokens from CLI argument
     pub fn with_max_tokens(mut self, max_tokens: Option<u32>) -> Self {
-        if max_tokens.is_some() {
-            self.max_tokens = max_tokens;
+        if let Some(t) = max_tokens {
+            self.max_tokens = Some(t);
         }
         self
     }
 
     /// Override temperature from CLI argument
     pub fn with_temperature(mut self, temperature: Option<f32>) -> Self {
-        if temperature.is_some() {
-            self.temperature = temperature;
+        if let Some(t) = temperature {
+            self.temperature = Some(t);
         }
         self
     }

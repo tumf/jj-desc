@@ -12,7 +12,7 @@ pub enum JjDescError {
     #[error("Invalid provider: {0}. Valid providers are: openrouter, openai, anthropic, gemini")]
     InvalidProvider(String),
 
-    #[error("jj command failed: {0}")]
+    #[error("Jj command failed: {0}")]
     JjCommand(String),
 
     #[error("API request failed with status {status}: {body}")]
@@ -47,7 +47,7 @@ mod tests {
         );
 
         let err = JjDescError::JjCommand("test error".to_string());
-        assert_eq!(err.to_string(), "jj command failed: test error");
+        assert_eq!(err.to_string(), "Jj command failed: test error");
 
         let err = JjDescError::ApiStatus {
             status: 401,
