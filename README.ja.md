@@ -14,7 +14,7 @@
 - 🔍 `--dry-run` でプレビューモード
 - 💬 インタラクティブモードで適用前に確認
 - 🎚️ jj の revset 構文で柔軟にターゲット指定
-- 📝 [Conventional Commits](https://www.conventionalcommits.org/) 形式に準拠
+- 📝 [Conventional Commits](https://www.conventionalcommits.org/)（デフォルト）または [Scoped Commits](https://scopedcommits.com) 形式に準拠
 - 🔀 マージコミットを自動処理（空のマージコミットは LLM 呼び出し不要）
 - ⚡ 大きな diff に最適化: ロックファイルを自動除外、バイナリファイルを簡略化
 - 🎛️ `--exclude` オプションでファイル除外をカスタマイズ可能
@@ -129,6 +129,7 @@ export LLM_PROVIDER=openai        # オプション: openrouter, openai, anthrop
 |------|------|------------|------|
 | `LLM_PROVIDER` | ❌ | `openrouter` | 使用する LLM プロバイダー |
 | `LLM_MODEL` | ❌ | (プロバイダーのデフォルト) | モデルを上書き |
+| `LLM_COMMIT_STYLE` | ❌ | `conventional` | コミットメッセージのスタイル (`conventional`, `scoped`) |
 
 #### プロバイダー別 API キー
 
@@ -339,6 +340,7 @@ Options:
       --model <MODEL>              使用する LLM モデルを上書き
       --max-tokens <MAX_TOKENS>    LLM レスポンスの最大トークン数
       --temperature <TEMPERATURE>  LLM レスポンスの temperature (0.0-2.0)
+      --style <STYLE>              コミットメッセージのスタイル [env: LLM_COMMIT_STYLE] [default: conventional] [possible values: conventional, scoped]
   -r, --revisions <REVISIONS>      ターゲットコミットを選択する revset [default: "::@ & mutable()"]
   -n, --limit <LIMIT>              処理するコミットの最大数
   -i, --interactive                各説明文を適用する前に確認

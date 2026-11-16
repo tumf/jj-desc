@@ -17,7 +17,8 @@ pub async fn execute(args: Args) -> Result<()> {
         .context("Failed to set provider")?
         .with_model(args.model)
         .with_max_tokens(args.max_tokens)
-        .with_temperature(args.temperature);
+        .with_temperature(args.temperature)
+        .with_style(args.style);
 
     info!(
         "Using provider: {}, model: {}",

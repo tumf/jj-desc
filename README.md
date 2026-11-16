@@ -14,7 +14,7 @@ English | [日本語](README.ja.md)
 - 🔍 Preview mode with `--dry-run`
 - 💬 Interactive mode for reviewing each description before applying
 - 🎚️ Flexible targeting with jj revset syntax
-- 📝 Follows [Conventional Commits](https://www.conventionalcommits.org/) format
+- 📝 Follows [Conventional Commits](https://www.conventionalcommits.org/) (default) or [Scoped Commits](https://scopedcommits.com) format
 - 🔀 Handles merge commits automatically (no LLM call needed for empty merge commits)
 - ⚡ Optimized for large diffs: automatically excludes lock files and simplifies binary files
 - 🎛️ Customizable file exclusions with `--exclude` option
@@ -129,6 +129,7 @@ export LLM_PROVIDER=openai        # Options: openrouter, openai, anthropic, gemi
 |----------|----------|---------|-------------|
 | `LLM_PROVIDER` | ❌ | `openrouter` | LLM provider to use |
 | `LLM_MODEL` | ❌ | (provider default) | Override the model |
+| `LLM_COMMIT_STYLE` | ❌ | `conventional` | Commit message style (`conventional`, `scoped`) |
 
 #### Provider-Specific API Keys
 
@@ -339,6 +340,7 @@ Options:
       --model <MODEL>              Override the LLM model to use
       --max-tokens <MAX_TOKENS>    Maximum tokens for LLM response
       --temperature <TEMPERATURE>  Temperature for LLM response (0.0-2.0)
+      --style <STYLE>              Commit message style [env: LLM_COMMIT_STYLE] [default: conventional] [possible values: conventional, scoped]
   -r, --revisions <REVISIONS>      Revset to select target commits [default: "::@ & mutable()"]
   -n, --limit <LIMIT>              Maximum number of commits to process
   -i, --interactive                Ask for confirmation before applying each description

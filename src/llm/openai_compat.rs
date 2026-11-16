@@ -6,7 +6,7 @@ use crate::llm::{
     DEFAULT_CONNECT_TIMEOUT_SECS, DEFAULT_MAX_TOKENS, DEFAULT_REQUEST_TIMEOUT_SECS,
     DEFAULT_TEMPERATURE, LlmClient, build_http_client,
 };
-use crate::prompt::{SYSTEM_PROMPT, build_user_prompt};
+use crate::prompt::build_user_prompt;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -63,11 +63,11 @@ impl LlmClient for OpenAICompatClient {
             messages: vec![
                 Message {
                     role: "system".to_string(),
-                    content: SYSTEM_PROMPT.to_string(),
+                    content: self.config.style.system_prompt().to_string(),
                 },
                 Message {
                     role: "user".to_string(),
-                    content: build_user_prompt(diff),
+                    content: build_user_prompt(diff, self.config.style),
                 },
             ],
             max_tokens: self.config.max_tokens.or(Some(DEFAULT_MAX_TOKENS)),
@@ -175,7 +175,9 @@ mod tests {
             messages: vec![
                 Message {
                     role: "system".to_string(),
-                    content: SYSTEM_PROMPT.to_string(),
+                    content: crate::prompt::CommitStyle::default()
+                        .system_prompt()
+                        .to_string(),
                 },
                 Message {
                     role: "user".to_string(),
