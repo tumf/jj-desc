@@ -6,7 +6,7 @@ use crate::llm::{
     DEFAULT_CONNECT_TIMEOUT_SECS, DEFAULT_MAX_TOKENS, DEFAULT_REQUEST_TIMEOUT_SECS,
     DEFAULT_TEMPERATURE, LlmClient, build_http_client,
 };
-use crate::prompt::{SYSTEM_PROMPT, build_user_prompt};
+use crate::prompt::build_user_prompt;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -66,10 +66,10 @@ impl LlmClient for AnthropicClient {
         let request = AnthropicRequest {
             model: self.config.model.clone(),
             max_tokens: self.config.max_tokens.unwrap_or(DEFAULT_MAX_TOKENS),
-            system: SYSTEM_PROMPT.to_string(),
+            system: self.config.style.system_prompt().to_string(),
             messages: vec![AnthropicMessage {
                 role: "user".to_string(),
-                content: build_user_prompt(diff),
+                content: build_user_prompt(diff, self.config.style),
             }],
             temperature: self.config.temperature.or(Some(DEFAULT_TEMPERATURE)),
         };
@@ -156,7 +156,9 @@ mod tests {
         let request = AnthropicRequest {
             model: "claude-sonnet-4-20250514".to_string(),
             max_tokens: DEFAULT_MAX_TOKENS,
-            system: SYSTEM_PROMPT.to_string(),
+            system: crate::prompt::CommitStyle::default()
+                .system_prompt()
+                .to_string(),
             messages: vec![AnthropicMessage {
                 role: "user".to_string(),
                 content: "test diff".to_string(),

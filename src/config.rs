@@ -1,6 +1,7 @@
 // Configuration and environment variable management
 
 use crate::error::JjDescError;
+use crate::prompt::CommitStyle;
 use crate::provider::Provider;
 use std::env;
 
@@ -21,6 +22,7 @@ pub struct Config {
     pub base_url: String,
     pub max_tokens: Option<u32>,
     pub temperature: Option<f32>,
+    pub style: CommitStyle,
 }
 
 impl Config {
@@ -79,6 +81,7 @@ impl Config {
             base_url,
             max_tokens,
             temperature,
+            style: CommitStyle::default(),
         })
     }
 
@@ -119,6 +122,12 @@ impl Config {
         self
     }
 
+    /// Set the commit message style
+    pub fn with_style(mut self, style: CommitStyle) -> Self {
+        self.style = style;
+        self
+    }
+
     /// Override temperature from CLI argument
     pub fn with_temperature(mut self, temperature: Option<f32>) -> Self {
         if let Some(t) = temperature {
@@ -143,6 +152,7 @@ mod tests {
             base_url: "https://example.com".to_string(),
             max_tokens: None,
             temperature: None,
+            style: CommitStyle::default(),
         };
 
         let updated = config.with_model(Some("new-model".to_string()));
@@ -260,6 +270,7 @@ mod tests {
                 base_url: "https://example.com".to_string(),
                 max_tokens: None,
                 temperature: None,
+                style: CommitStyle::default(),
             };
 
             // Switch provider - model should NOT change
@@ -291,6 +302,7 @@ mod tests {
                 base_url: "https://example.com".to_string(),
                 max_tokens: None,
                 temperature: None,
+                style: CommitStyle::default(),
             };
 
             // Switch provider - model SHOULD update to new provider's default
@@ -352,6 +364,7 @@ mod tests {
             base_url: "https://example.com".to_string(),
             max_tokens: None,
             temperature: None,
+            style: CommitStyle::default(),
         };
 
         let updated = config

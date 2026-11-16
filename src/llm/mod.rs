@@ -69,6 +69,7 @@ pub(crate) fn test_config(provider: Provider) -> Config {
         base_url: provider.default_base_url().to_string(),
         max_tokens: None,
         temperature: None,
+        style: crate::prompt::CommitStyle::default(),
     }
 }
 

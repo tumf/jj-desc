@@ -1,5 +1,6 @@
 // CLI argument definitions
 
+use crate::prompt::CommitStyle;
 use crate::provider::Provider;
 use clap::Parser;
 
@@ -33,6 +34,10 @@ pub struct Args {
     /// Temperature for LLM response (0.0-2.0)
     #[arg(long, env = "LLM_TEMPERATURE")]
     pub temperature: Option<f32>,
+
+    /// Commit message style (conventional, scoped)
+    #[arg(long, env = "LLM_COMMIT_STYLE", value_enum, default_value_t = CommitStyle::Conventional)]
+    pub style: CommitStyle,
 
     /// Revset to select target commits (defaults to ::@ & mutable())
     #[arg(short, long, default_value = DEFAULT_REVSET)]
@@ -147,6 +152,24 @@ mod tests {
     #[test]
     fn test_invalid_provider() {
         let result = Args::try_parse_from(&["jj-desc", "--provider", "invalid"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_default_style() {
+        let args = Args::try_parse_from(&["jj-desc"]).unwrap();
+        assert_eq!(args.style, CommitStyle::Conventional);
+    }
+
+    #[test]
+    fn test_style_option() {
+        let args = Args::try_parse_from(&["jj-desc", "--style", "scoped"]).unwrap();
+        assert_eq!(args.style, CommitStyle::Scoped);
+    }
+
+    #[test]
+    fn test_invalid_style() {
+        let result = Args::try_parse_from(&["jj-desc", "--style", "invalid"]);
         assert!(result.is_err());
     }
 
